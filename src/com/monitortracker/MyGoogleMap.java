@@ -1,0 +1,500 @@
+package com.monitortracker;
+
+//import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List; 
+import java.util.Locale; 
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+
+import android.app.AlertDialog;
+import android.content.Context; 
+import android.content.DialogInterface;
+import android.content.Intent; 
+//import android.graphics.drawable.Drawable;
+import android.location.Address; 
+import android.location.Criteria; 
+import android.location.Geocoder; 
+import android.location.Location; 
+import android.location.LocationListener; 
+import android.location.LocationManager; 
+import android.os.Bundle; 
+import android.os.Environment;
+//import android.util.Log;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+import android.view.View; 
+import android.widget.Button; 
+import android.widget.EditText; 
+import android.widget.RatingBar;
+import android.widget.Toast;
+//import android.widget.Toast;
+
+import com.google.android.maps.GeoPoint; 
+//import com.google.android.maps.ItemizedOverlay;
+import com.google.android.maps.MapActivity; 
+import com.google.android.maps.MapController; 
+import com.google.android.maps.MapView; 
+//import com.google.android.maps.Overlay;
+//import com.google.android.maps.OverlayItem;
+
+public class MyGoogleMap extends MapActivity 
+{ 
+  //private TextView mTextView01;
+  static public MyGoogleMap my;
+  private MyGoogleMap mMyGoogleMap = this;
+  
+  private MapController mMapController01; 
+  private MapView mMapView; 
+  
+  private MyOverLay overlay;
+  private List<MapLocation> mapLocations;
+
+  private Button mButton01,mButton02,mButton03,mButton04,mButton05;
+  private int intZoomLevel=0;//geoLatitude,geoLongitude; 
+  public GeoPoint nowGeoPoint;
+  
+  private String IPAddress;
+  
+  public static  MapLocation mSelectedMapLocation;  
+  
+  @Override 
+  protected void onCreate(Bundle icicle) 
+  { 
+    // TODO Auto-generated method stub 
+    super.onCreate(icicle); 
+    setContentView(R.layout.main2); 
+
+    my = this;
+    mMapView = (MapView)findViewById(R.id.myMapView1); 
+    mMapController01 = mMapView.getController(); 
+     
+    mMapView.setSatellite(false);
+    mMapView.setStreetView(true);
+    mMapView.setEnabled(true);
+    mMapView.setClickable(true);
+     
+    intZoomLevel = 15; 
+    mMapController01.setZoom(intZoomLevel); 
+
+    IPAddress ="192.168.123.101";
+    
+    //getChildIP
+    final EditText input = new EditText(mMyGoogleMap);
+
+    AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
+
+    alert.setTitle("設定Child Phone IP");
+    alert.setMessage("請輸入Child Phone IP位置");
+    
+    // Set an EditText view to get user input 
+    alert.setView(input);
+    
+    alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+    public void onClick(DialogInterface dialog, int whichButton) 
+    {
+      try
+      {
+        IPAddress = input.getText().toString();        
+      }
+      catch (Exception e)
+      {
+        e.printStackTrace();
+      }
+      //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+    }
+    });
+
+    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      public void onClick(DialogInterface dialog, int whichButton) {
+        // Canceled.
+      }
+    });
+
+    alert.show();      
+    
+    
+    try
+    {
+      File vSDCard= Environment.getExternalStorageDirectory();
+      File sFile = new File(vSDCard + "/gps_handler");
+      //exist file
+      //Open file
+      if(sFile.exists()) 
+      {
+        //getMapLocations(true);
+        FileReader fileReader = new FileReader(sFile);
+        BufferedReader bufReader = new BufferedReader(fileReader);
+        String str="";
+        while((str = bufReader.readLine()) != null)
+        {
+            //ThisLetter=ThisLetter+str;
+        }        
+        fileReader.close();        
+        
+        //sendtoChildTracker
+        
+      }    
+    }
+    catch (IOException  e)
+    {
+      e.printStackTrace();      
+    }   
+    catch (Exception e)
+    {
+      e.printStackTrace();      
+    }  
+    
+    //refreshMapViewByGeoPoint(nowGeoPoint, 
+    //                   mMapView, intZoomLevel); 
+     
+    //mLocationManager01.requestLocationUpdates 
+    //(strLocationProvider, 2000, 10, mLocationListener01); 
+     
+    overlay = new MyOverLay(this);
+    mMapView.getOverlays().add(overlay);
+    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+
+    mButton01 = (Button)findViewById(R.id.myButton1); 
+    mButton01.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        overlay.clearRange();
+      } 
+    }); 
+     
+    mButton02 = (Button)findViewById(R.id.myButton2); 
+    mButton02.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        // TODO Auto-generated method stub 
+        intZoomLevel++; 
+        if(intZoomLevel>mMapView.getMaxZoomLevel()) 
+        { 
+          intZoomLevel = mMapView.getMaxZoomLevel(); 
+        } 
+        mMapController01.setZoom(intZoomLevel); 
+      } 
+    }); 
+     
+
+    mButton03 = (Button)findViewById(R.id.myButton3); 
+    mButton03.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        // TODO Auto-generated method stub 
+        intZoomLevel--; 
+        if(intZoomLevel<1) 
+        { 
+          intZoomLevel = 1; 
+        } 
+        mMapController01.setZoom(intZoomLevel); 
+      } 
+    });
+
+    //Satellite
+    mButton04 = (Button)findViewById(R.id.myButton4); 
+    mButton04.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        // TODO Auto-generated method stub
+       String str = mButton04.getText().toString();
+        
+       if (str.equals("衛星"))
+       {
+        mButton04.setText("街道");
+        mMapView.setStreetView(false);
+        mMapView.setSatellite(true);
+        mMapView.setTraffic(false);
+       }
+       else
+       {
+         mButton04.setText("衛星");
+         mMapView.setStreetView(true);
+         mMapView.setSatellite(false);
+         mMapView.setTraffic(false);
+       }
+      } 
+    }); 
+
+    mButton05 = (Button)findViewById(R.id.myButton5); 
+    mButton05.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      {
+        final EditText input = new EditText(mMyGoogleMap);
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
+
+        alert.setTitle("設定Child Phone IP");
+        alert.setMessage("請Child Phone IP位置");
+        
+        input.setText(IPAddress);
+        
+        // Set an EditText view to get user input 
+        alert.setView(input);
+        
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        public void onClick(DialogInterface dialog, int whichButton) 
+        {
+          try
+          {
+            IPAddress = input.getText().toString();
+          }
+          catch (Exception e)
+          {
+            e.printStackTrace();
+          }
+          //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+        }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int whichButton) {
+            // Canceled.
+          }
+        });
+
+        alert.show();      
+        
+      } 
+    });
+   
+   /* GeoPoint gp = new GeoPoint((int)geoLatitude,(int)geoLongitude);
+    Drawable dr = getResources().getDrawable
+    (
+      android.R.drawable.arrow 
+     );
+    dr.setBounds(-15,-15,15, 15);
+    
+    MyItemOverlay mOverlay01 = new MyItemOverlay(dr,gp);
+    List<Overlay> overlays = mMapView.getOverlays();
+    overlays.add(mOverlay01);*/
+  }
+  
+  public List<MapLocation> getMapLocations(boolean doit) 
+  {
+    if (mapLocations == null || doit == true) 
+    {
+      mapLocations = new ArrayList<MapLocation>();
+    }
+    return mapLocations;
+  }
+ 
+  private GeoPoint getGeoByLocation(Location location) 
+  { 
+    GeoPoint gp = null; 
+    try 
+    { 
+      if (location != null) 
+      { 
+        double geoLatitude = location.getLatitude()*1E6; 
+        double geoLongitude = location.getLongitude()*1E6; 
+        gp = new GeoPoint((int) geoLatitude, (int) geoLongitude); 
+      } 
+    } 
+    catch(Exception e) 
+    { 
+      e.printStackTrace(); 
+    } 
+    return gp; 
+  } 
+   
+  private GeoPoint getGeoByAddress(String strSearchAddress) 
+  { 
+    GeoPoint gp = null; 
+    try 
+    { 
+      if(strSearchAddress!="") 
+      { 
+        Geocoder mGeocoder01 = new Geocoder 
+        (MyGoogleMap.this, Locale.getDefault()); 
+         
+        List<Address> lstAddress = mGeocoder01.getFromLocationName
+                           (strSearchAddress, 10);
+        if (!lstAddress.isEmpty()) 
+        { 
+          /*for (int i = 0; i < lstAddress.size(); ++i)
+          {
+            Address adsLocation = lstAddress.get(i);
+            //Log.i(TAG, "Address found = " + adsLocation.toString()); 
+            double geoLatitude = adsLocation.getLatitude();
+            double geoLongitude = adsLocation.getLongitude();
+          } */
+          Address adsLocation = lstAddress.get(0); 
+          double geoLatitude = adsLocation.getLatitude()*1E6; 
+          double geoLongitude = adsLocation.getLongitude()*1E6; 
+          gp = new GeoPoint((int) geoLatitude, (int) geoLongitude); 
+        }
+        
+      } 
+    } 
+    catch (Exception e) 
+    {  
+      e.printStackTrace();  
+    } 
+    return gp; 
+  } 
+   
+  public static void refreshMapViewByGeoPoint 
+  (GeoPoint gp, MapView mapview, int zoomLevel) 
+  { 
+    try 
+    { 
+      mapview.displayZoomControls(true); 
+      MapController myMC = mapview.getController(); 
+      myMC.animateTo(gp); 
+      myMC.setZoom(zoomLevel); 
+      //mapview.setSatellite(false);
+      
+    } 
+    catch(Exception e) 
+    { 
+      e.printStackTrace(); 
+    } 
+  } 
+   
+  public static void refreshMapViewByCode 
+  (double latitude, double longitude, 
+      MapView mapview, int zoomLevel) 
+  { 
+    try 
+    { 
+      GeoPoint p = new GeoPoint((int) latitude, (int) longitude); 
+      mapview.displayZoomControls(true); 
+      MapController myMC = mapview.getController(); 
+      myMC.animateTo(p); 
+      myMC.setZoom(zoomLevel); 
+      mapview.setSatellite(false); 
+    } 
+    catch(Exception e) 
+    { 
+      e.printStackTrace(); 
+    } 
+  } 
+   
+  private String GeoPointToString(GeoPoint gp) 
+  { 
+    String strReturn=""; 
+    try 
+    { 
+      if (gp != null) 
+      { 
+        double geoLatitude = (int)gp.getLatitudeE6()/1E6; 
+        double geoLongitude = (int)gp.getLongitudeE6()/1E6; 
+        strReturn = String.valueOf(geoLatitude)+","+
+          String.valueOf(geoLongitude); 
+      } 
+    } 
+    catch(Exception e) 
+    { 
+      e.printStackTrace(); 
+    } 
+    return strReturn; 
+  }
+
+  public String getIEMI()
+  {
+    return  ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).getDeviceId();
+  }
+   
+  public void getLocationProvider() 
+  { 
+    try 
+    { 
+      Criteria mCriteria01 = new Criteria(); 
+      mCriteria01.setAccuracy(Criteria.ACCURACY_FINE); 
+      mCriteria01.setAltitudeRequired(false); 
+      mCriteria01.setBearingRequired(false); 
+      mCriteria01.setCostAllowed(true); 
+      mCriteria01.setPowerRequirement(Criteria.POWER_LOW); 
+      //strLocationProvider = mLocationManager01.getBestProvider(mCriteria01, true); 
+       
+      //mLocation01 = mLocationManager01.getLastKnownLocation (strLocationProvider); //?
+    } 
+    catch(Exception e) 
+    { 
+      //mTextView01.setText(e.toString()); 
+      e.printStackTrace(); 
+    } 
+  }
+  
+ /* private class MyItemOverlay extends ItemizedOverlay<OverlayItem>
+  {
+    private List<OverlayItem> items = new ArrayList<OverlayItem>();
+    public MyItemOverlay(Drawable defaultMarker , GeoPoint gp)
+    {
+      super(defaultMarker);
+      items.add(new OverlayItem(gp,"Title","Snippet"));
+      populate();
+    }
+    
+    @Override
+    protected OverlayItem createItem(int i)
+    {
+      return items.get(i);
+    }
+    
+    @Override
+    public int size()
+    {
+      return items.size();
+    }
+    
+    @Override
+    protected boolean onTap(int pIndex)
+    {
+      Toast.makeText
+      (
+        Flora_Expo.this,items.get(pIndex).getSnippet(),
+        Toast.LENGTH_LONG
+      ).show();
+      return true;
+    }
+  }*/
+   
+  @Override 
+  protected boolean isRouteDisplayed() 
+  { 
+    // TODO Auto-generated method stub 
+    return false; 
+  } 
+  
+  //show message
+  public void openOptionsDialog(String info)
+  {
+    new AlertDialog.Builder(this)
+    .setTitle("message")
+    .setMessage(info)
+    .setPositiveButton("OK",
+        new DialogInterface.OnClickListener()
+        {
+         public void onClick(DialogInterface dialoginterface, int i)
+         {
+         }
+         }
+        )
+    .show();
+  }
+}
