@@ -61,6 +61,8 @@ public class MyGoogleMap extends MapActivity
   static public MyGoogleMap my;
   private MyGoogleMap mMyGoogleMap = this;
   
+  private SocketServer s_socket = null;
+  
   private MapController mMapController01; 
   private MapView mMapView; 
   
@@ -72,6 +74,9 @@ public class MyGoogleMap extends MapActivity
   public GeoPoint nowGeoPoint;
   
   private String IPAddress;
+  private SendDataSocket sData;
+  
+  private int serve_port = 12121;
   
   public static  MapLocation mSelectedMapLocation;  
   
@@ -149,6 +154,7 @@ public class MyGoogleMap extends MapActivity
         }        
         fileReader.close();        
         
+        SendGPSData();
         //sendtoChildTracker
         
       }    
@@ -280,17 +286,19 @@ public class MyGoogleMap extends MapActivity
         
       } 
     });
-   
-   /* GeoPoint gp = new GeoPoint((int)geoLatitude,(int)geoLongitude);
-    Drawable dr = getResources().getDrawable
-    (
-      android.R.drawable.arrow 
-     );
-    dr.setBounds(-15,-15,15, 15);
     
-    MyItemOverlay mOverlay01 = new MyItemOverlay(dr,gp);
-    List<Overlay> overlays = mMapView.getOverlays();
-    overlays.add(mOverlay01);*/
+    //Open Server Socket
+    try {
+        s_socket = new SocketServer(serve_port, this);
+        Thread socket_thread = new Thread(s_socket);
+        socket_thread.start();
+    } 
+    catch (IOException e) {
+        e.printStackTrace();
+    }
+    catch (Exception e) {
+        e.printStackTrace();
+    }
   }
   
   public List<MapLocation> getMapLocations(boolean doit) 
@@ -373,7 +381,18 @@ public class MyGoogleMap extends MapActivity
     { 
       e.printStackTrace(); 
     } 
-  } 
+  }
+  
+  private void SendGPSData()
+  {
+    int port = 12122;
+    int timeout = 10000000;
+
+    sData = new SendDataSocket(this);
+    sData.SetAddressPort(IPAddress , port);
+    sData.SetFunction(1);    
+  }
+  
    
   public static void refreshMapViewByCode 
   (double latitude, double longitude, 
