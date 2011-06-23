@@ -23,12 +23,12 @@ public class SendDataSocket extends Thread
 	private MyGoogleMap GoogleMap;
 	public int takePictureCode;
 	public String error_string;
-
+  public String send_Data;
 	String line;
 	
 	public SendDataSocket(MyGoogleMap map) 
   {
-		//IsOK = false;
+		IsOK = false;
 		GoogleMap = map;
   }
 	
@@ -37,6 +37,11 @@ public class SendDataSocket extends Thread
 		this.address = addr;
 		this.port = p;
 	}
+	
+  public void SetSendData(String sdata)
+  {   
+    this.send_Data = sdata;
+  }	
 	
 	public String getTimeStamp()
 	{
@@ -71,7 +76,7 @@ public class SendDataSocket extends Thread
 
             if (function  == 1)
             {
-            	out.writeUTF("setGPSRange");
+            	out.writeUTF(send_Data);
 
             	// As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
@@ -79,100 +84,19 @@ public class SendDataSocket extends Thread
               while (true)
               {
                 line = is.readUTF();
-                
-                if (!line.equals("END"))
-                	timestamp = line;
-                
-                if (line.equals("END")) {
+                if (line.equals("OK")) 
+                {
+                  IsOK = true;
                 	break;
-                  }
+                }
               }
               	
               is.close();
              }
-            else if (function  == 2)
-            {
-           	out.writeUTF("Sync");
-	        	// As long as we receive data, server will data back to the client.
-	          DataInputStream is = new DataInputStream(client.getInputStream());
-	              
-	            while (true)
-	              {
-	              line = is.readUTF();
-	              
-	              if (line.equals("END")) {
-	              	break;
-	                }
-	              }
-	            
-	              is.close();
-            }
-            else if (function  == 3)
-            {
-           	out.writeUTF("NeedSync");
-           	// As long as we receive data, server will data back to the client.
-           	DataInputStream is = new DataInputStream(client.getInputStream());
-              
-           	while (true)
-           		{
-	              line = is.readUTF();
-	              
-	              if (!line.equals("END"))
-	              	timestamp = line;
-	              
-	              if (line.equals("END")) {
-	              	break;
-	                }
-           		}
-
-              is.close();
-            }
-            else if (function  == 4)
-             {
-              out.writeUTF("getTakePicture");
-              out.writeUTF(String.valueOf(PicCount));  
-              
-             	// As long as we receive data, server will data back to the client.
-             	DataInputStream is = new DataInputStream(client.getInputStream());
-                
-             	takePictureCode = 0;
-             	while (true)
-             	{
-  	              line = is.readUTF();
-  	              if (line.equals("OK")) 
-                  {
-  	                break;
-  	              }
-  	              else if (line.equals("Fail")) 
-	                {
-  	                break;
-  	              }
-             	}
-             	
-              is.close();
-              
-             }
-            else if (function  == 5)
-            {
-            	out.writeUTF("reSetPicNumber");
-            	out.writeUTF(String.valueOf(PicCount));            	
-            }
+            
             
         } catch (java.io.IOException e) {
-        	System.out.println("IOException :" + e.toString());
-           IsOK = false;
-           error_string = e.toString();
-           
-           if (function == 1)
-           {
-           }
-           if (function == 3)
-           {
-           }
-           if (function == 4)
-           {
-           }
-           //System.exit(1);
+          e.printStackTrace();
         }
 	}
 }

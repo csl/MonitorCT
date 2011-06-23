@@ -1,5 +1,7 @@
 package com.monitortracker;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.Paint.Style;
+import android.os.Environment;
 import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
@@ -100,8 +103,45 @@ public class MyOverLay  extends Overlay {
 		  if (gp.size() == 4)
 	    {
 		    //choice done. link
+		    double Tlplon = gp.get(0).getLongitudeE6()/ 1E6;
+        double Tlplat = gp.get(0).getLatitudeE6()/ 1E6;
+        double Trplon = gp.get(1).getLongitudeE6()/ 1E6;
+        double Trplat = gp.get(1).getLatitudeE6()/ 1E6;
+        double Blplon = gp.get(2).getLongitudeE6()/ 1E6;
+        double Blplat = gp.get(2).getLatitudeE6()/ 1E6;
+        double Brplon = gp.get(3).getLongitudeE6()/ 1E6;
+        double Brplat = gp.get(4).getLatitudeE6()/ 1E6;
+        
+        //write file & send to ChildPhone
+        File vSDCard = null;
+        
+        try {
+           if( Environment.getExternalStorageState().equals(Environment.MEDIA_REMOVED) )
+           {
+              ReadyShowRange = true;
+              return true;
+           }
+           else
+           {
+              vSDCard = Environment.getExternalStorageDirectory();
+           }
+           
+           File vPath = new File( vSDCard.getParent() + vSDCard.getName() + "/tom" );
+           if( !vPath.exists() )
+              vPath.mkdirs();
+           
+           FileWriter vFile = new FileWriter( vSDCard.getParent() + vSDCard.getName() + "/gps_handler" );
+           vFile.write(Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon);
+           vFile.close();
+         
+        } catch (Exception e) {
+          e.printStackTrace();
+        }        
 		    ReadyShowRange = true;
+		    String str = Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon;
+		    mLocationViewers.SendGPSData(str);
 	    }
+		  
 		}
 
 		/**

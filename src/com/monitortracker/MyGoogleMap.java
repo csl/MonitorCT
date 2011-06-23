@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List; 
 import java.util.Locale; 
+import java.util.StringTokenizer;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -80,6 +81,11 @@ public class MyGoogleMap extends MapActivity
   
   public static  MapLocation mSelectedMapLocation;  
   
+  public GeoPoint top_left;        
+  public GeoPoint top_right;
+  public GeoPoint bottom_left;
+  public GeoPoint bottom_right;   
+  
   @Override 
   protected void onCreate(Bundle icicle) 
   { 
@@ -139,7 +145,7 @@ public class MyGoogleMap extends MapActivity
     try
     {
       File vSDCard= Environment.getExternalStorageDirectory();
-      File sFile = new File(vSDCard + "/gps_handler");
+      File sFile = new File(vSDCard.getParent() + vSDCard.getName() + "/gps_handler");
       //exist file
       //Open file
       if(sFile.exists()) 
@@ -147,14 +153,35 @@ public class MyGoogleMap extends MapActivity
         //getMapLocations(true);
         FileReader fileReader = new FileReader(sFile);
         BufferedReader bufReader = new BufferedReader(fileReader);
-        String str="";
+        String str="", 
+               GPS_ORG_DATA = "";
+        
         while((str = bufReader.readLine()) != null)
         {
-            //ThisLetter=ThisLetter+str;
+          GPS_ORG_DATA = str;
         }        
         fileReader.close();        
         
-        SendGPSData();
+        //SetPoint
+        StringTokenizer Tok = new StringTokenizer(GPS_ORG_DATA, ",");
+        double GPSData[] = new double[8];
+        int i=0;
+        while (Tok.hasMoreElements())
+        {
+          GPSData[i] = Double.valueOf((String) Tok.nextElement());
+          i++;
+        }        
+        
+        top_left = new GeoPoint((int)(GPSData[0] * 1e6),
+            (int)(GPSData[1] * 1e6));
+        top_right = new GeoPoint((int)(GPSData[2] * 1e6),
+            (int)(GPSData[3] * 1e6));
+        bottom_left = new GeoPoint((int)(GPSData[4] * 1e6),
+            (int)(GPSData[5] * 1e6));
+        bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
+            (int)(GPSData[7] * 1e6));
+        
+        SendGPSData(GPS_ORG_DATA);
         //sendtoChildTracker
         
       }    
@@ -383,14 +410,15 @@ public class MyGoogleMap extends MapActivity
     } 
   }
   
-  private void SendGPSData()
+  public void SendGPSData(String GPSData)
   {
     int port = 12122;
-    int timeout = 10000000;
 
     sData = new SendDataSocket(this);
     sData.SetAddressPort(IPAddress , port);
-    sData.SetFunction(1);    
+    sData.SetSendData(GPSData);
+    sData.SetFunction(1); 
+    sData.start();
   }
   
    
