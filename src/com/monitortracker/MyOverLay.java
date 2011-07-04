@@ -94,24 +94,33 @@ public class MyOverLay  extends Overlay {
 		
 		int newPointSize = gp.size();
 		
-		if (newPointSize < 4)
+		if (newPointSize < 2)
 		{
 		  //mark TAG
 		  mSelectedMapLocation = getHitMapLocation(mapView, p);
 		  gp.add(p);
 
-		  if (gp.size() == 4)
+		  if (gp.size() == 2)
 	    {
-		    //choice done. link
-		    double Tlplon = gp.get(0).getLongitudeE6()/ 1E6;
+		    //TopLeft
         double Tlplat = gp.get(0).getLatitudeE6()/ 1E6;
-        double Trplon = gp.get(1).getLongitudeE6()/ 1E6;
-        double Trplat = gp.get(1).getLatitudeE6()/ 1E6;
-        double Blplon = gp.get(2).getLongitudeE6()/ 1E6;
-        double Blplat = gp.get(2).getLatitudeE6()/ 1E6;
-        double Brplon = gp.get(3).getLongitudeE6()/ 1E6;
-        double Brplat = gp.get(4).getLatitudeE6()/ 1E6;
-        
+        double Tlplon = gp.get(0).getLongitudeE6()/ 1E6;
+		    
+		    //BottomRight
+        double Brplat = gp.get(1).getLatitudeE6()/ 1E6;
+        double Brplon = gp.get(1).getLongitudeE6()/ 1E6;
+		    
+        double Trplat = Brplat;
+        double Trplon = Tlplon;
+        double Blplat = Tlplat;
+        double Blplon = Brplon;
+
+        gp.add(new GeoPoint((int)(Trplat * 1e6),
+            (int)(Trplon * 1e6)));
+        gp.add(new GeoPoint((int)(Blplat * 1e6),
+            (int)(Blplon * 1e6)));
+		    
+		    //choice done. link
         //write file & send to ChildPhone
         File vSDCard = null;
         
@@ -126,20 +135,24 @@ public class MyOverLay  extends Overlay {
               vSDCard = Environment.getExternalStorageDirectory();
            }
            
-           File vPath = new File( vSDCard.getParent() + vSDCard.getName() + "/tom" );
-           if( !vPath.exists() )
-              vPath.mkdirs();
-           
-           FileWriter vFile = new FileWriter( vSDCard.getParent() + vSDCard.getName() + "/gps_handler" );
+           File vPath = new File( vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler" );
+           Log.v("FILE PATH", vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
+           if (vPath.exists())
+           {
+             vPath.delete();
+           }
+           FileWriter vFile = new FileWriter( vPath );
            vFile.write(Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon);
            vFile.close();
          
         } catch (Exception e) {
           e.printStackTrace();
-        }        
+        } 
+        
 		    ReadyShowRange = true;
 		    String str = Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon;
-		    mLocationViewers.SendGPSData(str);
+		    Log.v("LAT/LONG", str);
+		    //mLocationViewers.SendGPSData(mLocationViewers.getLocalIpAddress() + "," + str);
 	    }
 		  
 		}
@@ -153,7 +166,7 @@ public class MyOverLay  extends Overlay {
     @Override
 	public void draw(Canvas canvas, MapView	mapView, boolean shadow) 
   {
-      drawNowGeoMap(canvas, mapView, shadow);
+      //drawNowGeoMap(canvas, mapView, shadow);
    		drawMapLocations(canvas, mapView, shadow);
    		drawPointRange(canvas, mapView, shadow);
    		//drawInfoWindow(canvas, mapView, shadow);
@@ -220,9 +233,9 @@ public class MyOverLay  extends Overlay {
         
         //calculate
         GeoPoint top_left = gp.get(0);        
-        GeoPoint top_right =  gp.get(1);
-        GeoPoint bottom_left =  gp.get(2);
-        GeoPoint buttom_right = gp.get(3);        
+        GeoPoint top_right =  gp.get(2);
+        GeoPoint bottom_left =  gp.get(3);
+        GeoPoint buttom_right = gp.get(1);        
         
         mapView.getProjection().toPixels(top_left, myScreenCoords1);
         mapView.getProjection().toPixels(top_right, myScreenCoords2);

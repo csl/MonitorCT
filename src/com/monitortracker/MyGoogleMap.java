@@ -8,8 +8,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List; 
 import java.util.Locale; 
 import java.util.StringTokenizer;
@@ -141,11 +145,19 @@ public class MyGoogleMap extends MapActivity
 
     alert.show();      
     
-    
+    //refreshMapViewByGeoPoint(nowGeoPoint, 
+    //                   mMapView, intZoomLevel); 
+     
+    //mLocationManager01.requestLocationUpdates 
+    //(strLocationProvider, 2000, 10, mLocationListener01); 
+     
+    overlay = new MyOverLay(this);
+    mMapView.getOverlays().add(overlay);
+    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
     try
     {
       File vSDCard= Environment.getExternalStorageDirectory();
-      File sFile = new File(vSDCard.getParent() + vSDCard.getName() + "/gps_handler");
+      File sFile = new File(vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
       //exist file
       //Open file
       if(sFile.exists()) 
@@ -181,9 +193,10 @@ public class MyGoogleMap extends MapActivity
         bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
             (int)(GPSData[7] * 1e6));
         
-        SendGPSData(GPS_ORG_DATA);
+        overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
+        Log.v("Loading file OK", vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
+        SendGPSData(getLocalIpAddress() + "," + GPS_ORG_DATA);
         //sendtoChildTracker
-        
       }    
     }
     catch (IOException  e)
@@ -195,16 +208,6 @@ public class MyGoogleMap extends MapActivity
       e.printStackTrace();      
     }  
     
-    //refreshMapViewByGeoPoint(nowGeoPoint, 
-    //                   mMapView, intZoomLevel); 
-     
-    //mLocationManager01.requestLocationUpdates 
-    //(strLocationProvider, 2000, 10, mLocationListener01); 
-     
-    overlay = new MyOverLay(this);
-    mMapView.getOverlays().add(overlay);
-    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
-
     mButton01 = (Button)findViewById(R.id.myButton1); 
     mButton01.setOnClickListener(new Button.OnClickListener() 
     { 
@@ -313,6 +316,8 @@ public class MyGoogleMap extends MapActivity
         
       } 
     });
+
+    Log.v("IPADDRESS", getLocalIpAddress());
     
     //Open Server Socket
     try {
@@ -326,6 +331,7 @@ public class MyGoogleMap extends MapActivity
     catch (Exception e) {
         e.printStackTrace();
     }
+    
   }
   
   public List<MapLocation> getMapLocations(boolean doit) 
@@ -419,6 +425,18 @@ public class MyGoogleMap extends MapActivity
     sData.SetSendData(GPSData);
     sData.SetFunction(1); 
     sData.start();
+  }
+  
+  public int refreshDouble2Geo(double lat, double longa)
+  {
+    GeoPoint gp = new GeoPoint((int)(lat * 1e6),
+        (int)(longa * 1e6));
+    
+    nowGeoPoint = gp;
+    
+    refreshMapViewByGeoPoint(nowGeoPoint, 
+        mMapView, intZoomLevel); 
+    return 1;
   }
   
    
@@ -527,6 +545,27 @@ public class MyGoogleMap extends MapActivity
     // TODO Auto-generated method stub 
     return false; 
   } 
+  
+  public String getLocalIpAddress() {
+    try {
+      for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); )
+      {
+          NetworkInterface intf = en.nextElement();
+            for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) 
+            {
+                InetAddress inetAddress = enumIpAddr.nextElement();
+                if (!inetAddress.isLoopbackAddress()) {
+                    return inetAddress.getHostAddress().toString();
+                }
+            }
+      }
+    }
+    catch (SocketException ex) {
+        Log.e("", ex.toString());
+    }
+
+    return null;
+  }    
   
   //show message
   public void openOptionsDialog(String info)

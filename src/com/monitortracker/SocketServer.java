@@ -2,6 +2,9 @@ package com.monitortracker;
 
 import java.io.*;
 import java.net.*;
+import java.util.StringTokenizer;
+
+import com.google.android.maps.GeoPoint;
 
 import android.util.Log;
 import android.widget.Toast;
@@ -33,61 +36,30 @@ public class SocketServer implements Runnable
 				DataInputStream in = new DataInputStream(con.getInputStream());
 				String str = in.readUTF();
 				Log.v("vDEBUG: ", "vClient " + str);
-/*				
-				if (str.equals("getTimeStamp"))
-				{
-					DataOutputStream out = new DataOutputStream(con.getOutputStream());
-					
-					out.writeUTF(Long.toString(System.currentTimeMillis()/1000));
-					out.writeUTF("END");
-					out.flush();
-				}
-				else if (str.equals("NeedSync"))
-				{
-					long diff = mysc.SyncTimeStamp();
-
-					if (diff == 0)
-					{
-						DataOutputStream out = new DataOutputStream(con.getOutputStream());
-						
-						out.writeUTF(Long.toString(System.currentTimeMillis()/1000));
-						out.writeUTF("END");
-						out.flush();
-					}
-				}
-				else if (str.equals("Sync"))
-				{
-					IsSync = true;		
-					DataOutputStream out = new DataOutputStream(con.getOutputStream());
-					out.writeUTF(mysc.Imei);					
-					out.writeUTF("END");
-					out.flush();
-				}
-				else if (IsSync == true && str.equals("getTakePicture"))
-				{
-				    String count = in.readUTF();
-				    mysc.PictureCount = Integer.valueOf(count);					    
-				    Log.d("TAG", "getTakePicture " + mysc.PictureCount);
-					DataOutputStream out = new DataOutputStream(con.getOutputStream());
-					
-					mysc.takePicture();
-					out.writeUTF("OK");
-					out.flush();
-						
-				}
-				else if (IsSync == true && str.equals("getPicData"))
-				{
-					    Log.d("TAG", "getPicData");
-					    String count = in.readUTF();
-					    mysc.sendfile(con.getInetAddress().toString().substring(1), Integer.valueOf(count));				    
-				}
-				else if (IsSync == true && str.equals("reSetPicNumber"))
-				{
-					    Log.d("TAG", "reSetPicNumber");
-					    String count = in.readUTF();
-					    mysc.PictureCount = Integer.valueOf(count);					    
-				}
-	*/			
+				
+		    StringTokenizer Tok = new StringTokenizer(str, ",");
+		    double GPSData[] = new double[3];
+		    int i=0;
+		    while (Tok.hasMoreElements())
+		    {
+	        GPSData[i] = Double.valueOf((String) Tok.nextElement());
+		      i++;
+		    }      
+				
+		    MonitorMap.refreshDouble2Geo(GPSData[0], GPSData[1]);
+		    
+		    //OverRange
+		    if (i == 3)
+		    {
+		      //show message
+		    }
+		    
+        DataOutputStream out = new DataOutputStream(con.getOutputStream());
+        
+        out.writeUTF(Long.toString(System.currentTimeMillis()/1000));
+        out.writeUTF("END");
+        out.flush();
+        
 				in.close();
 				con.close();
 			}
