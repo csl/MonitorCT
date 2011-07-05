@@ -152,7 +152,7 @@ public class MyOverLay  extends Overlay {
 		    ReadyShowRange = true;
 		    String str = Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon;
 		    Log.v("LAT/LONG", str);
-		    //mLocationViewers.SendGPSData(mLocationViewers.getLocalIpAddress() + "," + str);
+		    mLocationViewers.SendGPSData(mLocationViewers.getLocalIpAddress() + "," + str);
 	    }
 		  
 		}
@@ -166,7 +166,7 @@ public class MyOverLay  extends Overlay {
     @Override
 	public void draw(Canvas canvas, MapView	mapView, boolean shadow) 
   {
-      //drawNowGeoMap(canvas, mapView, shadow);
+      drawNowGeoMap(canvas, mapView, shadow);
    		drawMapLocations(canvas, mapView, shadow);
    		drawPointRange(canvas, mapView, shadow);
    		//drawInfoWindow(canvas, mapView, shadow);
@@ -259,16 +259,19 @@ public class MyOverLay  extends Overlay {
     
     private void drawNowGeoMap(Canvas canvas, MapView mapView, boolean shadow) 
     {
-      Paint paint = new Paint();
-      Point myScreenCoords = new Point();
-
-      mapView.getProjection().toPixels(mLocationViewers.nowGeoPoint, myScreenCoords);
-      paint.setStrokeWidth(1);
-      paint.setARGB(255, 255, 0, 0);
-      paint.setStyle(Paint.Style.STROKE);
-
-      canvas.drawBitmap(mNowIcon, myScreenCoords.x, myScreenCoords.y, paint);
-      canvas.drawText("現在位置", myScreenCoords.x, myScreenCoords.y, paint);
+      if (mLocationViewers.nowGeoPoint != null)
+      {
+        Paint paint = new Paint();
+        Point myScreenCoords = new Point();
+  
+        mapView.getProjection().toPixels(mLocationViewers.nowGeoPoint, myScreenCoords);
+        paint.setStrokeWidth(1);
+        paint.setARGB(255, 255, 0, 0);
+        paint.setStyle(Paint.Style.STROKE);
+  
+        canvas.drawBitmap(mNowIcon, myScreenCoords.x, myScreenCoords.y, paint);
+        canvas.drawText("現在位置", myScreenCoords.x, myScreenCoords.y, paint);
+      }
     }
     
     private void drawMapLocations(Canvas canvas, MapView	mapView, boolean shadow) {
