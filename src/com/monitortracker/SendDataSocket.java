@@ -70,7 +70,7 @@ public class SendDataSocket extends Thread
         InetSocketAddress isa = new InetSocketAddress(address, port);
 
         try {
-            client.connect(isa, 10000);
+            client.connect(isa, 10001);
             
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
 

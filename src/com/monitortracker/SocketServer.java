@@ -45,19 +45,22 @@ public class SocketServer implements Runnable
 	        GPSData[i] = Double.valueOf((String) Tok.nextElement());
 		      i++;
 		    }      
-				
-		    MonitorMap.refreshDouble2Geo(GPSData[0], GPSData[1]);
-		    
+				 
 		    //OverRange
 		    if (i == 3)
 		    {
 		      //show message
+          MonitorMap.refreshDouble2Geo(GPSData[0], GPSData[1], 1);
+		    }
+		    else
+		    {
+	        MonitorMap.refreshDouble2Geo(GPSData[0], GPSData[1], 0);
 		    }
 		    
         DataOutputStream out = new DataOutputStream(con.getOutputStream());
         
         out.writeUTF(Long.toString(System.currentTimeMillis()/1000));
-        out.writeUTF("END");
+        out.writeUTF("OK");
         out.flush();
         
 				in.close();

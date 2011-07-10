@@ -42,6 +42,8 @@ import android.location.LocationListener;
 import android.location.LocationManager; 
 import android.os.Bundle; 
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 //import android.util.Log;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -49,6 +51,7 @@ import android.view.View;
 import android.widget.Button; 
 import android.widget.EditText; 
 import android.widget.RatingBar;
+import android.widget.TextView;
 import android.widget.Toast;
 //import android.widget.Toast;
 
@@ -62,6 +65,9 @@ import com.google.android.maps.MapView;
 
 public class MyGoogleMap extends MapActivity 
 { 
+  
+  private static final int MSG_DIALOG_SAFE = 1;  
+  private static final int MSG_DIALOG_OVERRANGE = 2;  
   //private TextView mTextView01;
   static public MyGoogleMap my;
   private MyGoogleMap mMyGoogleMap = this;
@@ -89,6 +95,9 @@ public class MyGoogleMap extends MapActivity
   public GeoPoint top_right;
   public GeoPoint bottom_left;
   public GeoPoint bottom_right;   
+  public boolean mshow;
+   
+  public TextView label;
   
   @Override 
   protected void onCreate(Bundle icicle) 
@@ -97,9 +106,12 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
 
+
     my = this;
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
+
+    label = (TextView) findViewById(R.id.cstaus);
      
     mMapView.setSatellite(false);
     mMapView.setStreetView(true);
@@ -109,13 +121,16 @@ public class MyGoogleMap extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.123.101";
+    IPAddress ="192.168.173.103";
+    mshow = false;
     
     //getChildIP
     final EditText input = new EditText(mMyGoogleMap);
-
+    input.setText(IPAddress);
     AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
 
+    //openOptionsDialog(getLocalIpAddress());
+    
     alert.setTitle("設定Child Phone IP");
     alert.setMessage("請輸入Child Phone IP位置");
     
@@ -427,7 +442,7 @@ public class MyGoogleMap extends MapActivity
     sData.start();
   }
   
-  public int refreshDouble2Geo(double lat, double longa)
+  public int refreshDouble2Geo(double lat, double longa, int showrange)
   {
     GeoPoint gp = new GeoPoint((int)(lat * 1e6),
         (int)(longa * 1e6));
@@ -435,7 +450,23 @@ public class MyGoogleMap extends MapActivity
     nowGeoPoint = gp;
     
     refreshMapViewByGeoPoint(nowGeoPoint, 
-        mMapView, intZoomLevel); 
+        mMapView, intZoomLevel);
+    
+    if (mshow == false && showrange == 1)
+    {
+      mshow = true;
+      Message msg = new Message();
+      msg.what = MSG_DIALOG_SAFE;
+      myHandler.sendMessage(msg);       
+    }
+    else
+    {
+      mshow = true;
+      Message msg = new Message();
+      msg.what = MSG_DIALOG_OVERRANGE;
+      myHandler.sendMessage(msg);       
+    }
+    
     return 1;
   }
   
@@ -565,7 +596,24 @@ public class MyGoogleMap extends MapActivity
     }
 
     return null;
-  }    
+  }
+  
+  public Handler myHandler = new Handler(){
+    public void handleMessage(Message msg) {
+        switch(msg.what)
+        {
+          case MSG_DIALOG_SAFE:
+                label.setText("SAFE");
+                break;
+          case MSG_DIALOG_OVERRANGE:
+                label.setText("OverRange");
+                break;
+          default:
+                label.setText(Integer.toString(msg.what));
+        }
+        super.handleMessage(msg);
+    }
+};  
   
   //show message
   public void openOptionsDialog(String info)
@@ -578,6 +626,7 @@ public class MyGoogleMap extends MapActivity
         {
          public void onClick(DialogInterface dialoginterface, int i)
          {
+           mshow = false;
          }
          }
         )
