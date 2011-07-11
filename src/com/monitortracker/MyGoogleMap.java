@@ -129,7 +129,7 @@ public class MyGoogleMap extends MapActivity
     input.setText(IPAddress);
     AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
 
-    //openOptionsDialog(getLocalIpAddress());
+    openOptionsDialog(getLocalIpAddress());
     
     alert.setTitle("設定Child Phone IP");
     alert.setMessage("請輸入Child Phone IP位置");
@@ -452,18 +452,17 @@ public class MyGoogleMap extends MapActivity
     refreshMapViewByGeoPoint(nowGeoPoint, 
         mMapView, intZoomLevel);
     
-    if (mshow == false && showrange == 1)
+    if (showrange == 1)
     {
-      mshow = true;
       Message msg = new Message();
-      msg.what = MSG_DIALOG_SAFE;
+      msg.what = MSG_DIALOG_OVERRANGE;
       myHandler.sendMessage(msg);       
     }
     else
     {
       mshow = true;
       Message msg = new Message();
-      msg.what = MSG_DIALOG_OVERRANGE;
+      msg.what = MSG_DIALOG_SAFE;
       myHandler.sendMessage(msg);       
     }
     
@@ -603,10 +602,10 @@ public class MyGoogleMap extends MapActivity
         switch(msg.what)
         {
           case MSG_DIALOG_SAFE:
-                label.setText("SAFE");
+                label.setText("安全");
                 break;
           case MSG_DIALOG_OVERRANGE:
-                label.setText("OverRange");
+                label.setText("超出");
                 break;
           default:
                 label.setText(Integer.toString(msg.what));
