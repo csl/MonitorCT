@@ -17,11 +17,8 @@ public class SendDataSocket extends Thread
 	private String address;
 	private int port;
 	private int function;
-	private String timestamp;
-	private int PicCount;
 	private boolean IsOK;
 	private MyGoogleMap GoogleMap;
-	public int takePictureCode;
 	public String error_string;
   public String send_Data;
 	String line;
@@ -32,6 +29,7 @@ public class SendDataSocket extends Thread
 		GoogleMap = map;
   }
 	
+	//設定IPAddress和Port
 	public void SetAddressPort(String addr, int p)
 	{		
 		this.address = addr;
@@ -43,21 +41,11 @@ public class SendDataSocket extends Thread
     this.send_Data = sdata;
   }	
 	
-	public String getTimeStamp()
-	{
-		return timestamp;		
-	}
-	
 	public void SetFunction(int func)
 	{
 		function = func;		
 	}
 
-	public void SetCount(int count)
-	{
-		PicCount = count;
-		
-	}
 	public boolean getIsOK()
 	{
 		return IsOK;
@@ -66,6 +54,7 @@ public class SendDataSocket extends Thread
 	@Override
 	public void run() 
 	{
+        //傳送
         Socket client = new Socket();
         InetSocketAddress isa = new InetSocketAddress(address, port);
 
@@ -76,11 +65,13 @@ public class SendDataSocket extends Thread
 
             if (function  == 1)
             {
+              //傳送字串座標
             	out.writeUTF(send_Data);
 
             	// As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
-                
+               
+              //是否傳送成功
               while (true)
               {
                 line = is.readUTF();
@@ -90,7 +81,6 @@ public class SendDataSocket extends Thread
                 	break;
                 }
               }
-              	
               is.close();
              }
             

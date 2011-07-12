@@ -44,12 +44,14 @@ public class MyOverLay  extends Overlay {
     
     private boolean ReadyShowRange;
     
+    public MapLocation mSelectedMapLocation;  
+    
 	/**
 	 * It is used to track the visibility of information window and clicked location is known location or not 
 	 * of the currently selected Map Location
 	 */
-    private MapLocation mSelectedMapLocation;  
     
+  //建構子, 初始化
 	public MyOverLay(MyGoogleMap mLocationViewers) {
 		
 		this.mLocationViewers = mLocationViewers;
@@ -64,6 +66,7 @@ public class MyOverLay  extends Overlay {
 	}
 	
 	@Override
+  //處理draw map上的圖案
 	public boolean onTap(GeoPoint p, MapView mapView)  {
 		
 		/**
@@ -92,14 +95,18 @@ public class MyOverLay  extends Overlay {
 		*/
 		Log.i("TAG", "onTap");
 		
+		//看現在記了幾點
 		int newPointSize = gp.size();
-		
+
+		//若小於兩點
 		if (newPointSize < 2)
 		{
 		  //mark TAG
 		  mSelectedMapLocation = getHitMapLocation(mapView, p);
+		  //加入
 		  gp.add(p);
 
+		  //若為2代表輸入完了, 顯示座標
 		  if (gp.size() == 2)
 	    {
 		    //TopLeft
@@ -122,6 +129,7 @@ public class MyOverLay  extends Overlay {
 		    
 		    //choice done. link
         //write file & send to ChildPhone
+        //若為2代表輸入完了, 寫入
         File vSDCard = null;
         
         try {
@@ -148,10 +156,11 @@ public class MyOverLay  extends Overlay {
         } catch (Exception e) {
           e.printStackTrace();
         } 
-        
+        //顯示它
 		    ReadyShowRange = true;
 		    String str = Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon;
 		    Log.v("LAT/LONG", str);
+		    //傳送給Tracker, 並帶IPAddress
 		    mLocationViewers.SendGPSData(mLocationViewers.getLocalIpAddress() + "," + str);
 	    }
 		  
@@ -163,15 +172,20 @@ public class MyOverLay  extends Overlay {
 		return true;
 	}
 	
-    @Override
+  @Override
+  //draw method  
 	public void draw(Canvas canvas, MapView	mapView, boolean shadow) 
   {
+      //畫現在位置
       drawNowGeoMap(canvas, mapView, shadow);
+      //畫地圖座標
    		drawMapLocations(canvas, mapView, shadow);
+      //畫地圖GPS Range座標
    		drawPointRange(canvas, mapView, shadow);
    		//drawInfoWindow(canvas, mapView, shadow);
   }
     
+  //清除GPS Range座標
   public void clearRange()
   {
     ReadyShowRange = false;
@@ -219,10 +233,10 @@ public class MyOverLay  extends Overlay {
     	return hitMapLocation; 
     }
 
-    
+    //draw range
     private void drawPointRange(Canvas canvas, MapView mapView, boolean shadow) 
     {
-      
+      //若要求顯示才顯示
       if (ReadyShowRange == true)
       {
         Paint paint = new Paint();
@@ -237,6 +251,7 @@ public class MyOverLay  extends Overlay {
         GeoPoint bottom_left =  gp.get(3);
         GeoPoint buttom_right = gp.get(1);        
         
+        //將座標顯示上去
         mapView.getProjection().toPixels(top_left, myScreenCoords1);
         mapView.getProjection().toPixels(top_right, myScreenCoords2);
         mapView.getProjection().toPixels(bottom_left, myScreenCoords3);
@@ -259,11 +274,13 @@ public class MyOverLay  extends Overlay {
     
     private void drawNowGeoMap(Canvas canvas, MapView mapView, boolean shadow) 
     {
+      //顯示現在位置
       if (mLocationViewers.nowGeoPoint != null)
       {
         Paint paint = new Paint();
         Point myScreenCoords = new Point();
-  
+        
+        //顯示現在位置  
         mapView.getProjection().toPixels(mLocationViewers.nowGeoPoint, myScreenCoords);
         paint.setStrokeWidth(1);
         paint.setARGB(255, 255, 0, 0);
@@ -288,46 +305,6 @@ public class MyOverLay  extends Overlay {
 	    	} else {
     			canvas.drawBitmap(mBubbleIcon, screenCoords.x - mBubbleIcon.getWidth()/2, screenCoords.y - mBubbleIcon.getHeight(),null);
 	    	}
-    	}
-    }
-
-    private void drawInfoWindow(Canvas canvas, MapView	mapView, boolean shadow) {
-    	
-    	if ( mSelectedMapLocation != null) {
-    		if ( shadow) {
-    			//  Skip painting a shadow
-    		} else {
-				//  First we need to determine the screen coordinates of the selected MapLocation
-				Point selDestinationOffset = new Point();
-				mapView.getProjection().toPixels(mSelectedMapLocation.getPoint(), selDestinationOffset);
-		    	
-		    	//  Setup the info window
-				int INFO_WINDOW_WIDTH = 175;
-				int INFO_WINDOW_HEIGHT = 40;
-				
-				RectF infoWindowRect = new RectF(0,0,INFO_WINDOW_WIDTH,INFO_WINDOW_HEIGHT);
-				
-				infoWindowOffsetX = selDestinationOffset.x-INFO_WINDOW_WIDTH/2;
-				infoWindowOffsetY = selDestinationOffset.y-INFO_WINDOW_HEIGHT-mBubbleIcon.getHeight();
-				infoWindowRect.offset(infoWindowOffsetX,infoWindowOffsetY);
-
-				//  Drawing the inner info window
-				canvas.drawRoundRect(infoWindowRect, 10, 10, getmInnerPaint());
-				
-				//  Drawing the border for info window
-				canvas.drawRoundRect(infoWindowRect, 10, 10, getmBorderPaint());
-					
-				//  Draw the MapLocation's name
-				int TEXT_OFFSET_X = 10;
-				int TEXT_OFFSET_Y = 15;
-
-        int TEXT1_OFFSET_X = 20;
-        int TEXT1_OFFSET_Y = 25;
-
-				//canvas.drawText(mSelectedMapLocation.getName(), infoWindowOffsetX+TEXT_OFFSET_X,infoWindowOffsetY+TEXT_OFFSET_Y, getmTextPaint());
-        canvas.drawText("請點選地標, 並選擇", infoWindowOffsetX+TEXT1_OFFSET_X,infoWindowOffsetY+TEXT1_OFFSET_Y, getmTextPaint());
-        showWinInfo = true;
-			}
     	}
     }
 
@@ -359,7 +336,8 @@ public class MyOverLay  extends Overlay {
 		}
 		return mTextPaint;
 	}
-	
+
+	//設定GPS Range座標
 	public void SetPoint(GeoPoint G1, GeoPoint G2, GeoPoint G3, GeoPoint G4)
 	{
     gp.add(G1);

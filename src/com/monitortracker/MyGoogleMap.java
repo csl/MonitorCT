@@ -106,13 +106,17 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
 
-
+	
     my = this;
+
+    //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
 
+    //訊息顯示
     label = (TextView) findViewById(R.id.cstaus);
-     
+    
+    //參數設定 
     mMapView.setSatellite(false);
     mMapView.setStreetView(true);
     mMapView.setEnabled(true);
@@ -124,12 +128,12 @@ public class MyGoogleMap extends MapActivity
     IPAddress ="192.168.173.103";
     mshow = false;
     
-    //getChildIP
+    //顯示輸入IP的windows
     final EditText input = new EditText(mMyGoogleMap);
     input.setText(IPAddress);
     AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
 
-    openOptionsDialog(getLocalIpAddress());
+    //openOptionsDialog(getLocalIpAddress());
     
     alert.setTitle("設定Child Phone IP");
     alert.setMessage("請輸入Child Phone IP位置");
@@ -160,15 +164,15 @@ public class MyGoogleMap extends MapActivity
 
     alert.show();      
     
-    //refreshMapViewByGeoPoint(nowGeoPoint, 
-    //                   mMapView, intZoomLevel); 
-     
     //mLocationManager01.requestLocationUpdates 
     //(strLocationProvider, 2000, 10, mLocationListener01); 
      
+    //建構畫在GoogleMap的overlay
     overlay = new MyOverLay(this);
     mMapView.getOverlays().add(overlay);
     //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
+
+    //讀sdcard, 若之前有記下的gps range座標讀回來
     try
     {
       File vSDCard= Environment.getExternalStorageDirectory();
@@ -178,6 +182,7 @@ public class MyGoogleMap extends MapActivity
       if(sFile.exists()) 
       {
         //getMapLocations(true);
+	//開檔去問
         FileReader fileReader = new FileReader(sFile);
         BufferedReader bufReader = new BufferedReader(fileReader);
         String str="", 
@@ -189,7 +194,7 @@ public class MyGoogleMap extends MapActivity
         }        
         fileReader.close();        
         
-        //SetPoint
+	//將格式左上, 左下, 右上, 右下切開
         StringTokenizer Tok = new StringTokenizer(GPS_ORG_DATA, ",");
         double GPSData[] = new double[8];
         int i=0;
@@ -207,9 +212,12 @@ public class MyGoogleMap extends MapActivity
             (int)(GPSData[5] * 1e6));
         bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
             (int)(GPSData[7] * 1e6));
-        
+
+        //將座標設進overlay中，並顯示在畫面上
         overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
         Log.v("Loading file OK", vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
+
+	//傳出設定的GPS Range座標給Tracker
         SendGPSData(getLocalIpAddress() + "," + GPS_ORG_DATA);
         //sendtoChildTracker
       }    
@@ -223,6 +231,7 @@ public class MyGoogleMap extends MapActivity
       e.printStackTrace();      
     }  
     
+    //按下清除座標
     mButton01 = (Button)findViewById(R.id.myButton1); 
     mButton01.setOnClickListener(new Button.OnClickListener() 
     { 
@@ -232,6 +241,7 @@ public class MyGoogleMap extends MapActivity
       } 
     }); 
      
+    //放大地圖
     mButton02 = (Button)findViewById(R.id.myButton2); 
     mButton02.setOnClickListener(new Button.OnClickListener() 
     { 
@@ -247,7 +257,7 @@ public class MyGoogleMap extends MapActivity
       } 
     }); 
      
-
+    //縮小地圖
     mButton03 = (Button)findViewById(R.id.myButton3); 
     mButton03.setOnClickListener(new Button.OnClickListener() 
     { 
@@ -263,7 +273,7 @@ public class MyGoogleMap extends MapActivity
       } 
     });
 
-    //Satellite
+    //Satellite或街道
     mButton04 = (Button)findViewById(R.id.myButton4); 
     mButton04.setOnClickListener(new Button.OnClickListener() 
     { 
@@ -289,6 +299,7 @@ public class MyGoogleMap extends MapActivity
       } 
     }); 
 
+    //重新設定IPAddress
     mButton05 = (Button)findViewById(R.id.myButton5); 
     mButton05.setOnClickListener(new Button.OnClickListener() 
     { 
@@ -334,7 +345,7 @@ public class MyGoogleMap extends MapActivity
 
     Log.v("IPADDRESS", getLocalIpAddress());
     
-    //Open Server Socket
+    //Open Server Socket, for trakcer傳來的資料
     try {
         s_socket = new SocketServer(serve_port, this);
         Thread socket_thread = new Thread(s_socket);
@@ -349,6 +360,7 @@ public class MyGoogleMap extends MapActivity
     
   }
   
+
   public List<MapLocation> getMapLocations(boolean doit) 
   {
     if (mapLocations == null || doit == true) 
@@ -358,61 +370,7 @@ public class MyGoogleMap extends MapActivity
     return mapLocations;
   }
  
-  private GeoPoint getGeoByLocation(Location location) 
-  { 
-    GeoPoint gp = null; 
-    try 
-    { 
-      if (location != null) 
-      { 
-        double geoLatitude = location.getLatitude()*1E6; 
-        double geoLongitude = location.getLongitude()*1E6; 
-        gp = new GeoPoint((int) geoLatitude, (int) geoLongitude); 
-      } 
-    } 
-    catch(Exception e) 
-    { 
-      e.printStackTrace(); 
-    } 
-    return gp; 
-  } 
-   
-  private GeoPoint getGeoByAddress(String strSearchAddress) 
-  { 
-    GeoPoint gp = null; 
-    try 
-    { 
-      if(strSearchAddress!="") 
-      { 
-        Geocoder mGeocoder01 = new Geocoder 
-        (MyGoogleMap.this, Locale.getDefault()); 
-         
-        List<Address> lstAddress = mGeocoder01.getFromLocationName
-                           (strSearchAddress, 10);
-        if (!lstAddress.isEmpty()) 
-        { 
-          /*for (int i = 0; i < lstAddress.size(); ++i)
-          {
-            Address adsLocation = lstAddress.get(i);
-            //Log.i(TAG, "Address found = " + adsLocation.toString()); 
-            double geoLatitude = adsLocation.getLatitude();
-            double geoLongitude = adsLocation.getLongitude();
-          } */
-          Address adsLocation = lstAddress.get(0); 
-          double geoLatitude = adsLocation.getLatitude()*1E6; 
-          double geoLongitude = adsLocation.getLongitude()*1E6; 
-          gp = new GeoPoint((int) geoLatitude, (int) geoLongitude); 
-        }
-        
-      } 
-    } 
-    catch (Exception e) 
-    {  
-      e.printStackTrace();  
-    } 
-    return gp; 
-  } 
-   
+  //由Tracker送來的座標來更新現在位置
   public static void refreshMapViewByGeoPoint 
   (GeoPoint gp, MapView mapview, int zoomLevel) 
   { 
@@ -431,6 +389,7 @@ public class MyGoogleMap extends MapActivity
     } 
   }
   
+  //傳送GPS Range座標出去給Tracker
   public void SendGPSData(String GPSData)
   {
     int port = 12122;
@@ -442,6 +401,7 @@ public class MyGoogleMap extends MapActivity
     sData.start();
   }
   
+  //將Tracker傳來的座標更新&showrange要不要顯示超出或安全
   public int refreshDouble2Geo(double lat, double longa, int showrange)
   {
     GeoPoint gp = new GeoPoint((int)(lat * 1e6),
@@ -467,51 +427,6 @@ public class MyGoogleMap extends MapActivity
     }
     
     return 1;
-  }
-  
-   
-  public static void refreshMapViewByCode 
-  (double latitude, double longitude, 
-      MapView mapview, int zoomLevel) 
-  { 
-    try 
-    { 
-      GeoPoint p = new GeoPoint((int) latitude, (int) longitude); 
-      mapview.displayZoomControls(true); 
-      MapController myMC = mapview.getController(); 
-      myMC.animateTo(p); 
-      myMC.setZoom(zoomLevel); 
-      mapview.setSatellite(false); 
-    } 
-    catch(Exception e) 
-    { 
-      e.printStackTrace(); 
-    } 
-  } 
-   
-  private String GeoPointToString(GeoPoint gp) 
-  { 
-    String strReturn=""; 
-    try 
-    { 
-      if (gp != null) 
-      { 
-        double geoLatitude = (int)gp.getLatitudeE6()/1E6; 
-        double geoLongitude = (int)gp.getLongitudeE6()/1E6; 
-        strReturn = String.valueOf(geoLatitude)+","+
-          String.valueOf(geoLongitude); 
-      } 
-    } 
-    catch(Exception e) 
-    { 
-      e.printStackTrace(); 
-    } 
-    return strReturn; 
-  }
-
-  public String getIEMI()
-  {
-    return  ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).getDeviceId();
   }
    
   public void getLocationProvider() 
@@ -576,6 +491,7 @@ public class MyGoogleMap extends MapActivity
     return false; 
   } 
   
+  //抓取手機的IP
   public String getLocalIpAddress() {
     try {
       for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); )
@@ -597,6 +513,7 @@ public class MyGoogleMap extends MapActivity
     return null;
   }
   
+  //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {
         switch(msg.what)

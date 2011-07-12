@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
+//此class主要在處理歡迎畫面
 public class menu extends ListActivity 
 { 
   private static final int MENU_START = Menu.FIRST  ;
@@ -39,7 +40,7 @@ public class menu extends ListActivity
       } 
   }
   
-  
+  //加入menu item
   public boolean onCreateOptionsMenu(Menu menu)
   {
     super.onCreateOptionsMenu(menu);
@@ -59,7 +60,8 @@ public class menu extends ListActivity
     
     switch (item.getItemId())
       { 
-          case MENU_START:    
+          case MENU_START: 
+	     //按menu->開啟Class MyGoogleMap	  
              intent.setClass(menu.this,MyGoogleMap.class);
              startActivity(intent);
              return true;
@@ -73,6 +75,7 @@ public class menu extends ListActivity
   return true ;
   }
   
+  //check Internet alive or not
   private boolean CheckInternet(int retry)
   {
     boolean has = false;
@@ -113,6 +116,7 @@ public class menu extends ListActivity
    return result;
   }
   
+  //show message, ask exit yes or no
   private void openOptionsDialog() {
     
     new AlertDialog.Builder(this)
