@@ -17,6 +17,8 @@ import java.util.Enumeration;
 import java.util.List; 
 import java.util.Locale; 
 import java.util.StringTokenizer;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -65,13 +67,12 @@ import com.google.android.maps.MapView;
 
 public class MyGoogleMap extends MapActivity 
 { 
-  
   private static final int MSG_DIALOG_SAFE = 1;  
   private static final int MSG_DIALOG_OVERRANGE = 2;  
   //private TextView mTextView01;
   static public MyGoogleMap my;
   private MyGoogleMap mMyGoogleMap = this;
-  
+  private Timer timer = new Timer();
   private SocketServer s_socket = null;
   
   private MapController mMapController01; 
@@ -86,8 +87,9 @@ public class MyGoogleMap extends MapActivity
   
   private String IPAddress;
   private SendDataSocket sData;
+  private SendDataSocket rData;
   
-  private int serve_port = 12121;
+  private int serve_port = 12341;
   
   public static  MapLocation mSelectedMapLocation;  
   
@@ -106,7 +108,6 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
 
-	
     my = this;
 
     //googleMAP
@@ -125,7 +126,7 @@ public class MyGoogleMap extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.173.103";
+    IPAddress ="192.168.173.101";
     mshow = false;
     
     //顯示輸入IP的windows
@@ -146,7 +147,8 @@ public class MyGoogleMap extends MapActivity
     {
       try
       {
-        IPAddress = input.getText().toString();        
+        IPAddress = input.getText().toString();  
+        timer.schedule(new DateTask(), 0, 1000);     
       }
       catch (Exception e)
       {
@@ -182,7 +184,6 @@ public class MyGoogleMap extends MapActivity
       if(sFile.exists()) 
       {
         //getMapLocations(true);
-	//開檔去問
         FileReader fileReader = new FileReader(sFile);
         BufferedReader bufReader = new BufferedReader(fileReader);
         String str="", 
@@ -194,7 +195,6 @@ public class MyGoogleMap extends MapActivity
         }        
         fileReader.close();        
         
-	//將格式左上, 左下, 右上, 右下切開
         StringTokenizer Tok = new StringTokenizer(GPS_ORG_DATA, ",");
         double GPSData[] = new double[8];
         int i=0;
@@ -346,6 +346,7 @@ public class MyGoogleMap extends MapActivity
     Log.v("IPADDRESS", getLocalIpAddress());
     
     //Open Server Socket, for trakcer傳來的資料
+    /*
     try {
         s_socket = new SocketServer(serve_port, this);
         Thread socket_thread = new Thread(s_socket);
@@ -356,8 +357,7 @@ public class MyGoogleMap extends MapActivity
     }
     catch (Exception e) {
         e.printStackTrace();
-    }
-    
+    }*/
   }
   
 
@@ -392,7 +392,7 @@ public class MyGoogleMap extends MapActivity
   //傳送GPS Range座標出去給Tracker
   public void SendGPSData(String GPSData)
   {
-    int port = 12122;
+    int port = 12341;
 
     sData = new SendDataSocket(this);
     sData.SetAddressPort(IPAddress , port);
@@ -530,6 +530,17 @@ public class MyGoogleMap extends MapActivity
         super.handleMessage(msg);
     }
 };  
+
+  public class DateTask extends TimerTask {
+    public void run() 
+    {
+      int port = 12341;
+      rData = new SendDataSocket(my);
+      rData.SetAddressPort(IPAddress , port);
+      rData.SetFunction(2); 
+      rData.start();
+    }
+  }
   
   //show message
   public void openOptionsDialog(String info)

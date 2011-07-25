@@ -160,8 +160,8 @@ public class MyOverLay  extends Overlay {
 		    ReadyShowRange = true;
 		    String str = Tlplat + "," + Tlplon + "," + Trplat + "," + Trplon + "," + Blplat + "," + Blplon + "," + Brplat + "," + Brplon;
 		    Log.v("LAT/LONG", str);
-		    //傳送給Tracker, 並帶IPAddress
-		    mLocationViewers.SendGPSData(mLocationViewers.getLocalIpAddress() + "," + str);
+		    //傳送給Tracker
+		    mLocationViewers.SendGPSData( str);
 	    }
 		  
 		}
