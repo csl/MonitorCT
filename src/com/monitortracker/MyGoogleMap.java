@@ -187,7 +187,7 @@ public class MyGoogleMap extends MapActivity
         FileReader fileReader = new FileReader(sFile);
         BufferedReader bufReader = new BufferedReader(fileReader);
         String str="", 
-               GPS_ORG_DATA = "";
+        GPS_ORG_DATA = "";
         
         while((str = bufReader.readLine()) != null)
         {
@@ -305,41 +305,18 @@ public class MyGoogleMap extends MapActivity
     { 
       public void onClick(View v) 
       {
-        final EditText input = new EditText(mMyGoogleMap);
-
-        AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
-
-        alert.setTitle("設定Child Phone IP");
-        alert.setMessage("請Child Phone IP位置");
+        String str = mButton05.getText().toString();
         
-        input.setText(IPAddress);
-        
-        // Set an EditText view to get user input 
-        alert.setView(input);
-        
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface dialog, int whichButton) 
+        if (str.equals("開啟軌跡"))
         {
-          try
-          {
-            IPAddress = input.getText().toString();
-          }
-          catch (Exception e)
-          {
-            e.printStackTrace();
-          }
-          //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+          mButton05.setText("關軌跡");
+          overlay.setTracker(true);
         }
-        });
-
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int whichButton) {
-            // Canceled.
-          }
-        });
-
-        alert.show();      
-        
+        else
+        {
+          mButton05.setText("開啟軌跡");
+          overlay.setTracker(false);
+        }
       } 
     });
 
@@ -409,17 +386,22 @@ public class MyGoogleMap extends MapActivity
     
     nowGeoPoint = gp;
     
+    //add to tracker
+    overlay.addGeoPoint(gp);
+    
     refreshMapViewByGeoPoint(nowGeoPoint, 
         mMapView, intZoomLevel);
     
     if (showrange == 1)
     {
+      //Over range
       Message msg = new Message();
       msg.what = MSG_DIALOG_OVERRANGE;
       myHandler.sendMessage(msg);       
     }
     else
     {
+      //Safe
       mshow = true;
       Message msg = new Message();
       msg.what = MSG_DIALOG_SAFE;
