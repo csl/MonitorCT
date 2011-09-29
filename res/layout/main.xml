@@ -12,11 +12,8 @@
     android:layout_height="wrap_content"
     android:text="@string/hello"
    />
-   
-  
-  
   <ListView 
-  	android:id="@id/android:list"
+  	android:id="@+id/android:list"
   	android:layout_width="fill_parent"
   	android:layout_height="fill_parent"
   	android:layout_weight="0"

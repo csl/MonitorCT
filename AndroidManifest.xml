@@ -18,7 +18,8 @@
         
       	<uses-library android:name="com.google.android.maps"/> 
         <activity android:name="MyGoogleMap"></activity>
-        <activity android:name="map"></activity>
+        <activity android:name="mlist"></activity>
+        <activity android:name="addgpsrange"></activity>
         
     </application>
     <uses-sdk android:minSdkVersion="8" />

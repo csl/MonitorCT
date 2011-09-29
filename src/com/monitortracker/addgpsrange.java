@@ -67,7 +67,7 @@ import com.google.android.maps.MapView;
 //import com.google.android.maps.Overlay;
 //import com.google.android.maps.OverlayItem;
 
-public class MyGoogleMap extends MapActivity 
+public class addgpsrange extends MapActivity 
 { 
   private static final int MSG_DIALOG_SAFE = 1;  
   private static final int MSG_DIALOG_OVERRANGE = 2;
@@ -76,8 +76,7 @@ public class MyGoogleMap extends MapActivity
   private static final int MENU_EXIT = Menu.FIRST +1 ;
 
   //private TextView mTextView01;
-  static public MyGoogleMap my;
-  private MyGoogleMap mMyGoogleMap = this;
+  static public addgpsrange my;
   private Timer timer = new Timer();
   private SocketServer s_socket = null;
   
@@ -112,10 +111,8 @@ public class MyGoogleMap extends MapActivity
   { 
     // TODO Auto-generated method stub 
     super.onCreate(icicle); 
-    setContentView(R.layout.main2); 
-
-    my = this;
-
+    setContentView(R.layout.addgpsrange); 
+/*
     //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
@@ -154,7 +151,7 @@ public class MyGoogleMap extends MapActivity
       try
       {
         IPAddress = input.getText().toString();  
-        //timer.schedule(new DateTask(), 0, 1000);     
+        timer.schedule(new DateTask(), 0, 1000);     
       }
       catch (Exception e)
       {
@@ -176,10 +173,67 @@ public class MyGoogleMap extends MapActivity
     //(strLocationProvider, 2000, 10, mLocationListener01); 
      
     //建構畫在GoogleMap的overlay
-    overlay = new MyOverLay(this);
+    overlay = new MyOverLay(null);
     mMapView.getOverlays().add(overlay);
     //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
 
+    //讀sdcard, 若之前有記下的gps range座標讀回來
+    try
+    {
+      File vSDCard= Environment.getExternalStorageDirectory();
+      File sFile = new File(vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
+      //exist file
+      //Open file
+      if(sFile.exists()) 
+      {
+        //getMapLocations(true);
+        FileReader fileReader = new FileReader(sFile);
+        BufferedReader bufReader = new BufferedReader(fileReader);
+        String str="", 
+        GPS_ORG_DATA = "";
+        
+        while((str = bufReader.readLine()) != null)
+        {
+          GPS_ORG_DATA = str;
+        }        
+        fileReader.close();        
+        
+        StringTokenizer Tok = new StringTokenizer(GPS_ORG_DATA, ",");
+        double GPSData[] = new double[8];
+        int i=0;
+        while (Tok.hasMoreElements())
+        {
+          GPSData[i] = Double.valueOf((String) Tok.nextElement());
+          i++;
+        }        
+        
+        top_left = new GeoPoint((int)(GPSData[0] * 1e6),
+            (int)(GPSData[1] * 1e6));
+        top_right = new GeoPoint((int)(GPSData[2] * 1e6),
+            (int)(GPSData[3] * 1e6));
+        bottom_left = new GeoPoint((int)(GPSData[4] * 1e6),
+            (int)(GPSData[5] * 1e6));
+        bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
+            (int)(GPSData[7] * 1e6));
+
+        //將座標設進overlay中，並顯示在畫面上
+        overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
+        Log.v("Loading file OK", vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
+
+	//傳出設定的GPS Range座標給Tracker
+        SendGPSData(getLocalIpAddress() + "," + GPS_ORG_DATA);
+        //sendtoChildTracker
+      }    
+    }
+    catch (IOException  e)
+    {
+      e.printStackTrace();      
+    }   
+    catch (Exception e)
+    {
+      e.printStackTrace();      
+    }  
+    
     //按下清除座標
     mButton01 = (Button)findViewById(R.id.myButton1); 
     mButton01.setOnClickListener(new Button.OnClickListener() 
@@ -290,9 +344,9 @@ public class MyGoogleMap extends MapActivity
   {
     super.onCreateOptionsMenu(menu);
     
-    menu.add(0 , MENU_MANAGE, 0 ,R.string.menu_manager)
+    menu.add(0 , MENU_MANAGE, 0 ,R.string.menu_start).setIcon(R.drawable.start)
     .setAlphabeticShortcut('S');
-    menu.add(0 , MENU_EXIT, 1 ,R.string.menu_exit)
+    menu.add(0 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
     .setAlphabeticShortcut('E');
   
      return true;  
@@ -308,7 +362,7 @@ public class MyGoogleMap extends MapActivity
           case MENU_MANAGE: 
             Intent open = new Intent();
              
-            open.setClass(MyGoogleMap.this, mlist.class);
+            open.setClass(addgpsrange.this, mlist.class);
             startActivity(open);
 
             return true;
@@ -354,7 +408,7 @@ public class MyGoogleMap extends MapActivity
   {
     int port = 12341;
 
-    sData = new SendDataSocket(this);
+    sData = new SendDataSocket(null);
     sData.SetAddressPort(IPAddress , port);
     sData.SetSendData(GPSData);
     sData.SetFunction(1); 
@@ -500,7 +554,7 @@ public class MyGoogleMap extends MapActivity
     public void run() 
     {
       int port = 12341;
-      rData = new SendDataSocket(my);
+      rData = new SendDataSocket(null);
       rData.SetAddressPort(IPAddress , port);
       rData.SetFunction(2); 
       rData.start();
