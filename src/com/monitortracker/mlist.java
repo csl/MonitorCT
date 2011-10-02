@@ -26,6 +26,7 @@ public class mlist extends Activity
 
   String newitem;
   private ArrayList<HashMap<String, String>> mrlist;
+  private ArrayList<grstruct> grs;
   private ListView gpslist;
 
 /** Called when the activity is first created. */
@@ -37,6 +38,7 @@ protected void onCreate(Bundle icicle)
     newitem = (String) this.getResources().getText(R.string.new_range);    
     gpslist = (ListView) findViewById(R.id.mlist);
     mrlist = new ArrayList<HashMap<String, String>>();
+    grs = new ArrayList<grstruct>();
 
     updatedata();
     gpslist.setOnItemClickListener(new OnItemClickListener() 
@@ -64,6 +66,14 @@ protected void onCreate(Bundle icicle)
            
           }  
       });   
+    
+  }
+
+  public void recGPSRange(String name, String dgps, String stime, String dtime)
+  {
+    grstruct newitem = new grstruct(name, dgps, stime, dtime);
+    
+    grs.add(newitem);
     
   }
 

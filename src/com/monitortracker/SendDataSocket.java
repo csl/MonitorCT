@@ -25,6 +25,7 @@ public class SendDataSocket extends Thread
 	private int IsOK;
 	private MyGoogleMap MonitorMap;
   private addgpsrange agps;
+  private mlist dmlist;
 	public String error_string;
   public String send_Data;
 	String line;
@@ -36,6 +37,7 @@ public class SendDataSocket extends Thread
 		IsOK = 0;
 		MonitorMap = map;
 		agps=null;
+		dmlist=null;
   }
 
 	public SendDataSocket(addgpsrange cm) 
@@ -43,8 +45,19 @@ public class SendDataSocket extends Thread
     IsOK = 0;
     agps = cm;
     MonitorMap = null;
+    dmlist = null;
     send_s = new ArrayList<String>();
   }
+
+  public SendDataSocket(mlist cm) 
+  {
+    IsOK = 0;
+    agps = null;
+    MonitorMap = null;
+    dmlist = cm;
+    send_s = new ArrayList<String>();
+  }
+	
 	
 	public void addstring(String add)
 	{
@@ -149,7 +162,26 @@ public class SendDataSocket extends Thread
               }
               is.close();
              }
-            
+            else if (function  == 3)
+            {
+              out.writeUTF("LGPS");
+
+              // As long as we receive data, server will data back to the client.
+              DataInputStream is = new DataInputStream(client.getInputStream());
+              line = is.readUTF();
+              int dsize = Integer.valueOf(line);
+              String cname, cgps, cstime, cdtime;
+              for (int i = 0; i<dsize; i++)
+              {
+                  cname = is.readUTF();
+                  cgps = is.readUTF();
+                  cstime = is.readUTF();
+                  cdtime = is.readUTF();
+                  dmlist.recGPSRange(cname, cgps, cstime, cdtime);
+              }
+              is.close();
+              
+            }            
             
         } catch (java.io.IOException e) {
           e.printStackTrace();
