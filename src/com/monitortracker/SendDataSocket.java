@@ -3,6 +3,8 @@ package com.monitortracker;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -20,17 +22,34 @@ public class SendDataSocket extends Thread
 	private String address;
 	private int port;
 	private int function;
-	private boolean IsOK;
+	private int IsOK;
 	private MyGoogleMap MonitorMap;
+  private addgpsrange agps;
 	public String error_string;
   public String send_Data;
 	String line;
 	
+	public List<String> send_s; 
+	
 	public SendDataSocket(MyGoogleMap map) 
   {
-		IsOK = false;
+		IsOK = 0;
 		MonitorMap = map;
+		agps=null;
   }
+
+	public SendDataSocket(addgpsrange cm) 
+  {
+    IsOK = 0;
+    agps = cm;
+    MonitorMap = null;
+    send_s = new ArrayList<String>();
+  }
+	
+	public void addstring(String add)
+	{
+	  send_s.add(add);
+	}
 	
 	//設定IPAddress和Port
 	public void SetAddressPort(String addr, int p)
@@ -49,7 +68,7 @@ public class SendDataSocket extends Thread
 		function = func;		
 	}
 
-	public boolean getIsOK()
+	public int getIsOK()
 	{
 		return IsOK;
 	}
@@ -57,12 +76,15 @@ public class SendDataSocket extends Thread
 	@Override
 	public void run() 
 	{
+	  int timeout=0;
+	  
+	  do {
         //傳送
         Socket client = new Socket();
         InetSocketAddress isa = new InetSocketAddress(address, port);
 
         try {
-            client.connect(isa, 10001);
+            client.connect(isa, 20021);
             
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
 
@@ -70,7 +92,10 @@ public class SendDataSocket extends Thread
              {
               //傳送字串座標
               out.writeUTF("SetGPSRange");
-             	out.writeUTF(send_Data);
+             	out.writeUTF(send_s.get(0));
+              out.writeUTF(send_s.get(1));
+              out.writeUTF(send_s.get(2));
+              out.writeUTF(send_s.get(3));
 
             	// As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
@@ -82,7 +107,8 @@ public class SendDataSocket extends Thread
                 if (line.equals("OK")) 
                 {
                   Log.v("vDEBUG: ", "SetGPSRange OK!!");
-                  IsOK = true;
+                  IsOK = 2;
+                  agps.msg_ok();
                 	break;
                 }
               }
@@ -128,5 +154,15 @@ public class SendDataSocket extends Thread
         } catch (java.io.IOException e) {
           e.printStackTrace();
         }
+        
+        timeout++;
+        if (timeout > 10)
+        {
+          agps.msg_fail();
+          Log.i("...", "timeout");
+          break;
+        }
+        
+	  } while (IsOK != 2);
 	}
 }

@@ -69,21 +69,24 @@ import com.google.android.maps.MapView;
 
 public class addgpsrange extends MapActivity 
 { 
-  private static final int MSG_DIALOG_SAFE = 1;  
-  private static final int MSG_DIALOG_OVERRANGE = 2;
+  private static final int MSG_DIALOG_SUCCESS = 1;  
+  private static final int MSG_DIALOG_FAIL = 2;
   
   private static final int MENU_MANAGE = Menu.FIRST  ;
   private static final int MENU_EXIT = Menu.FIRST +1 ;
 
-  //private TextView mTextView01;
+  public String gpsrange;
+  private TextView name;
+  private TextView stime;
+  private TextView dtime;  
   static public addgpsrange my;
   private Timer timer = new Timer();
-  private SocketServer s_socket = null;
+  //private SocketServer s_socket = null;
   
   private MapController mMapController01; 
   private MapView mMapView; 
   
-  private MyOverLay overlay;
+  private mOverLay overlay;
   private List<MapLocation> mapLocations;
 
   private Button mButton01,mButton02,mButton03,mButton04,mButton05;
@@ -92,10 +95,6 @@ public class addgpsrange extends MapActivity
   
   private String IPAddress;
   private SendDataSocket sData;
-  private SendDataSocket rData;
-  
-  private int serve_port = 12341;
-  
   public static  MapLocation mSelectedMapLocation;  
   
   public GeoPoint top_left;        
@@ -112,13 +111,18 @@ public class addgpsrange extends MapActivity
     // TODO Auto-generated method stub 
     super.onCreate(icicle); 
     setContentView(R.layout.addgpsrange); 
-/*
+
+    IPAddress = MyGoogleMap.my.IPAddress;
+    
     //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
 
     //訊息顯示
-    label = (TextView) findViewById(R.id.cstaus);
+    name = (TextView) findViewById(R.id.name);
+    stime = (TextView) findViewById(R.id.stime_text);
+    dtime = (TextView) findViewById(R.id.dtime_text);
+    gpsrange="";
     
     //參數設定 
     mMapView.setSatellite(false);
@@ -129,199 +133,53 @@ public class addgpsrange extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.173.101";
     mshow = false;
-    
-    //顯示輸入IP的windows
-    final EditText input = new EditText(mMyGoogleMap);
-    input.setText(IPAddress);
-    AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
-
-    //openOptionsDialog(getLocalIpAddress());
-    
-    alert.setTitle("設定Child Phone IP");
-    alert.setMessage("請輸入Child Phone IP位置");
-    
-    // Set an EditText view to get user input 
-    alert.setView(input);
-    
-    alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-    public void onClick(DialogInterface dialog, int whichButton) 
-    {
-      try
-      {
-        IPAddress = input.getText().toString();  
-        timer.schedule(new DateTask(), 0, 1000);     
-      }
-      catch (Exception e)
-      {
-        e.printStackTrace();
-      }
-      //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
-    }
-    });
-
-    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int whichButton) {
-        // Canceled.
-      }
-    });
-
-    alert.show();      
     
     //mLocationManager01.requestLocationUpdates 
     //(strLocationProvider, 2000, 10, mLocationListener01); 
      
     //建構畫在GoogleMap的overlay
-    overlay = new MyOverLay(null);
+    overlay = new mOverLay(this);
     mMapView.getOverlays().add(overlay);
     //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
 
-    //讀sdcard, 若之前有記下的gps range座標讀回來
-    try
-    {
-      File vSDCard= Environment.getExternalStorageDirectory();
-      File sFile = new File(vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
-      //exist file
-      //Open file
-      if(sFile.exists()) 
-      {
-        //getMapLocations(true);
-        FileReader fileReader = new FileReader(sFile);
-        BufferedReader bufReader = new BufferedReader(fileReader);
-        String str="", 
-        GPS_ORG_DATA = "";
-        
-        while((str = bufReader.readLine()) != null)
-        {
-          GPS_ORG_DATA = str;
-        }        
-        fileReader.close();        
-        
-        StringTokenizer Tok = new StringTokenizer(GPS_ORG_DATA, ",");
-        double GPSData[] = new double[8];
-        int i=0;
-        while (Tok.hasMoreElements())
-        {
-          GPSData[i] = Double.valueOf((String) Tok.nextElement());
-          i++;
-        }        
-        
-        top_left = new GeoPoint((int)(GPSData[0] * 1e6),
-            (int)(GPSData[1] * 1e6));
-        top_right = new GeoPoint((int)(GPSData[2] * 1e6),
-            (int)(GPSData[3] * 1e6));
-        bottom_left = new GeoPoint((int)(GPSData[4] * 1e6),
-            (int)(GPSData[5] * 1e6));
-        bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
-            (int)(GPSData[7] * 1e6));
-
-        //將座標設進overlay中，並顯示在畫面上
-        overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
-        Log.v("Loading file OK", vSDCard.getParent() + "/" + vSDCard.getName() + "/gps_handler");
-
-	//傳出設定的GPS Range座標給Tracker
-        SendGPSData(getLocalIpAddress() + "," + GPS_ORG_DATA);
-        //sendtoChildTracker
-      }    
-    }
-    catch (IOException  e)
-    {
-      e.printStackTrace();      
-    }   
-    catch (Exception e)
-    {
-      e.printStackTrace();      
-    }  
-    
-    //按下清除座標
-    mButton01 = (Button)findViewById(R.id.myButton1); 
+    mButton01 = (Button)findViewById(R.id.clear_button); 
     mButton01.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
       { 
         overlay.clearRange();
+        gpsrange="";
+        
       } 
     }); 
-     
-    //放大地圖
-    mButton02 = (Button)findViewById(R.id.myButton2); 
+
+    mButton02 = (Button)findViewById(R.id.add_button); 
     mButton02.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
-      { 
-        // TODO Auto-generated method stub 
-        intZoomLevel++; 
-        if(intZoomLevel>mMapView.getMaxZoomLevel()) 
-        { 
-          intZoomLevel = mMapView.getMaxZoomLevel(); 
-        } 
-        mMapController01.setZoom(intZoomLevel); 
+      {
+        String cname = name.getText().toString();
+        String sctime = stime.getText().toString();
+        String dctime = dtime.getText().toString();
+        if (!gpsrange.equals("") && !cname.equals("") 
+                        && !sctime.equals("") &&  !dctime.equals(""))
+        {
+          //sending
+          SendGPSData(cname, sctime, dctime, gpsrange);
+        }
+        
       } 
     }); 
-     
-    //縮小地圖
-    mButton03 = (Button)findViewById(R.id.myButton3); 
+
+    mButton03 = (Button)findViewById(R.id.cancel_button); 
     mButton03.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
-      { 
-        // TODO Auto-generated method stub 
-        intZoomLevel--; 
-        if(intZoomLevel<1) 
-        { 
-          intZoomLevel = 1; 
-        } 
-        mMapController01.setZoom(intZoomLevel); 
-      } 
-    });
-
-    //Satellite或街道
-    mButton04 = (Button)findViewById(R.id.myButton4); 
-    mButton04.setOnClickListener(new Button.OnClickListener() 
-    { 
-      public void onClick(View v) 
-      { 
-        // TODO Auto-generated method stub
-       String str = mButton04.getText().toString();
+      {
         
-       if (str.equals("衛星"))
-       {
-        mButton04.setText("街道");
-        mMapView.setStreetView(false);
-        mMapView.setSatellite(true);
-        mMapView.setTraffic(false);
-       }
-       else
-       {
-         mButton04.setText("衛星");
-         mMapView.setStreetView(true);
-         mMapView.setSatellite(false);
-         mMapView.setTraffic(false);
-       }
       } 
     }); 
-
-    //重新設定IPAddress
-    mButton05 = (Button)findViewById(R.id.myButton5); 
-    mButton05.setOnClickListener(new Button.OnClickListener() 
-    { 
-      public void onClick(View v) 
-      {
-        String str = mButton05.getText().toString();
-        
-        if (str.equals("開啟軌跡"))
-        {
-          mButton05.setText("關軌跡");
-          overlay.setTracker(true);
-        }
-        else
-        {
-          mButton05.setText("開啟軌跡");
-          overlay.setTracker(false);
-        }
-      } 
-    });
 
     Log.v("IPADDRESS", getLocalIpAddress());
     
@@ -354,9 +212,7 @@ public class addgpsrange extends MapActivity
   
   @Override
   public boolean onOptionsItemSelected(MenuItem item)
-  {
-    Intent intent = new Intent() ;
-    
+  {    
     switch (item.getItemId())
       { 
           case MENU_MANAGE: 
@@ -404,50 +260,23 @@ public class addgpsrange extends MapActivity
   }
   
   //傳送GPS Range座標出去給Tracker
-  public void SendGPSData(String GPSData)
+  public void SendGPSData(String name, String gpsdata, String st, String dt)
   {
     int port = 12341;
 
-    sData = new SendDataSocket(null);
+    sData = new SendDataSocket(this);
+    //handler: data
+    sData.addstring(name);
+    sData.addstring(gpsdata);
+    sData.addstring(st);
+    sData.addstring(dt);
+
     sData.SetAddressPort(IPAddress , port);
-    sData.SetSendData(GPSData);
     sData.SetFunction(1); 
     sData.start();
   }
   
-  //將Tracker傳來的座標更新&showrange要不要顯示超出或安全
-  public int refreshDouble2Geo(double lat, double longa, int showrange)
-  {
-    GeoPoint gp = new GeoPoint((int)(lat * 1e6),
-        (int)(longa * 1e6));
-    
-    nowGeoPoint = gp;
-    
-    //add to tracker
-    overlay.addGeoPoint(gp);
-    
-    refreshMapViewByGeoPoint(nowGeoPoint, 
-        mMapView, intZoomLevel);
-    
-    if (showrange == 1)
-    {
-      //Over range
-      Message msg = new Message();
-      msg.what = MSG_DIALOG_OVERRANGE;
-      myHandler.sendMessage(msg);       
-    }
-    else
-    {
-      //Safe
-      mshow = true;
-      Message msg = new Message();
-      msg.what = MSG_DIALOG_SAFE;
-      myHandler.sendMessage(msg);       
-    }
-    
-    return 1;
-  }
-   
+  
   public void getLocationProvider() 
   { 
     try 
@@ -532,34 +361,39 @@ public class addgpsrange extends MapActivity
     return null;
   }
   
+  void msg_ok()
+  {
+    //Over range
+    Message msg = new Message();
+    msg.what = MSG_DIALOG_SUCCESS;
+    myHandler.sendMessage(msg);       
+  }
+
+  void msg_fail()
+  {
+    //Over range
+    Message msg = new Message();
+    msg.what = MSG_DIALOG_FAIL;
+    myHandler.sendMessage(msg);       
+  }
+  
   //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {
         switch(msg.what)
         {
-          case MSG_DIALOG_SAFE:
-                label.setText("安全");
+          case MSG_DIALOG_SUCCESS:
+                openOptionsDialog("新增成功");
                 break;
-          case MSG_DIALOG_OVERRANGE:
-                label.setText("超出");
+          case MSG_DIALOG_FAIL:
+                openOptionsDialog("新增失敗");
                 break;
           default:
-                label.setText(Integer.toString(msg.what));
+                openOptionsDialog(Integer.toString(msg.what));
         }
         super.handleMessage(msg);
     }
 };  
-
-  public class DateTask extends TimerTask {
-    public void run() 
-    {
-      int port = 12341;
-      rData = new SendDataSocket(null);
-      rData.SetAddressPort(IPAddress , port);
-      rData.SetFunction(2); 
-      rData.start();
-    }
-  }
   
   //show message
   public void openOptionsDialog(String info)
@@ -572,7 +406,7 @@ public class addgpsrange extends MapActivity
         {
          public void onClick(DialogInterface dialoginterface, int i)
          {
-           mshow = false;
+           //mshow = false;
          }
          }
         )

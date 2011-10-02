@@ -21,7 +21,7 @@
      android:id="@+id/name"
      android:layout_width="fill_parent"
 	 android:layout_height="wrap_content" 
-     android:text="名稱: " 
+     android:text="text" 
 	/>
   </LinearLayout>
   <LinearLayout 
@@ -30,7 +30,7 @@
     android:layout_height="wrap_content" 
   > 
    <TextView 
-     android:id="@+id/stime_text"
+     android:id="@+id/s_text"
      android:layout_width="wrap_content"
 	 android:layout_height="wrap_content" 
      android:text="開始時間:" 
@@ -48,7 +48,7 @@
     android:text="設定"
   />
    <TextView 
-     android:id="@+id/stime_text"
+     android:id="@+id/d_text"
      android:layout_width="wrap_content"
 	 android:layout_height="wrap_content" 
      android:text="結束時間:" 
@@ -72,16 +72,21 @@
     android:layout_width="wrap_content" 
     android:layout_height="wrap_content" 
   > 
-
 	  <Button 
-    android:id="@+id/stime_button" 
+    android:id="@+id/clear_button" 
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content" 
+    android:text="清除範圍"
+  />
+	  <Button 
+    android:id="@+id/add_button" 
     android:layout_width="wrap_content" 
     android:layout_height="wrap_content" 
     android:text="新增"
   />
 
   <Button 
-    android:id="@+id/stime_button" 
+    android:id="@+id/cancel_button" 
     android:layout_width="wrap_content" 
     android:layout_height="wrap_content" 
     android:text="取消"

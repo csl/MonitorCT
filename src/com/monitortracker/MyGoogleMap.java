@@ -91,7 +91,7 @@ public class MyGoogleMap extends MapActivity
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
   public GeoPoint nowGeoPoint;
   
-  private String IPAddress;
+  public String IPAddress;
   private SendDataSocket sData;
   private SendDataSocket rData;
   
