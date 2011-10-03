@@ -104,6 +104,7 @@ public class addgpsrange extends MapActivity
   public boolean mshow;
    
   public TextView label;
+  private int port;
   
   @Override 
   protected void onCreate(Bundle icicle) 
@@ -113,7 +114,8 @@ public class addgpsrange extends MapActivity
     setContentView(R.layout.addgpsrange); 
 
     IPAddress = MyGoogleMap.my.IPAddress;
-    
+    port = MyGoogleMap.my.port;
+
     //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
@@ -262,8 +264,6 @@ public class addgpsrange extends MapActivity
   //傳送GPS Range座標出去給Tracker
   public void SendGPSData(String name, String gpsdata, String st, String dt)
   {
-    int port = 12341;
-
     sData = new SendDataSocket(this);
     //handler: data
     sData.addstring(name);

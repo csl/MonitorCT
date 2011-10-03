@@ -104,7 +104,7 @@ public class MyGoogleMap extends MapActivity
   public GeoPoint bottom_left;
   public GeoPoint bottom_right;   
   public boolean mshow;
-   
+  public int port;
   public TextView label;
   
   @Override 
@@ -133,6 +133,7 @@ public class MyGoogleMap extends MapActivity
     mMapController01.setZoom(intZoomLevel); 
 
     IPAddress ="192.168.173.101";
+    port = 12341;
     mshow = false;
     
     //顯示輸入IP的windows
@@ -352,8 +353,6 @@ public class MyGoogleMap extends MapActivity
   //傳送GPS Range座標出去給Tracker
   public void SendGPSData(String GPSData)
   {
-    int port = 12341;
-
     sData = new SendDataSocket(this);
     sData.SetAddressPort(IPAddress , port);
     sData.SetSendData(GPSData);

@@ -164,23 +164,26 @@ public class SendDataSocket extends Thread
              }
             else if (function  == 3)
             {
+              String cname, cgps, cstime, cdtime;
               out.writeUTF("LGPS");
 
               // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
               line = is.readUTF();
               int dsize = Integer.valueOf(line);
-              String cname, cgps, cstime, cdtime;
+              IsOK = 2;
+
               for (int i = 0; i<dsize; i++)
-              {
+                {
                   cname = is.readUTF();
                   cgps = is.readUTF();
                   cstime = is.readUTF();
                   cdtime = is.readUTF();
                   dmlist.recGPSRange(cname, cgps, cstime, cdtime);
-              }
+                }
               is.close();
               
+              dmlist.updatedata();
             }            
             
         } catch (java.io.IOException e) {
