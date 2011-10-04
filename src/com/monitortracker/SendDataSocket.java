@@ -102,7 +102,7 @@ public class SendDataSocket extends Thread
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
 
             if (function  == 1)
-             {
+            {
               //傳送字串座標
               out.writeUTF("SetGPSRange");
              	out.writeUTF(send_s.get(0));
@@ -164,7 +164,7 @@ public class SendDataSocket extends Thread
              }
             else if (function  == 3)
             {
-              String cname, cgps, cstime, cdtime;
+              String cid, cname, cgps, cstime, cdtime;
               out.writeUTF("LGPS");
 
               // As long as we receive data, server will data back to the client.
@@ -174,17 +174,68 @@ public class SendDataSocket extends Thread
               IsOK = 2;
 
               for (int i = 0; i<dsize; i++)
-                {
+              {
+                  cid = is.readUTF();
                   cname = is.readUTF();
                   cgps = is.readUTF();
                   cstime = is.readUTF();
                   cdtime = is.readUTF();
-                  dmlist.recGPSRange(cname, cgps, cstime, cdtime);
-                }
+                  dmlist.recGPSRange(cid, cname, cgps, cstime, cdtime);
+              }
               is.close();
               
               dmlist.updatedata();
             }            
+            if (function == 4)
+            {
+             //傳送字串座標
+             out.writeUTF("DGPS");
+             out.writeUTF(dmlist.grs.get(dmlist.cindex).name);
+             
+             // As long as we receive data, server will data back to the client.
+             DataInputStream is = new DataInputStream(client.getInputStream());
+              
+             //是否傳送成功
+             while (true)
+             {
+               line = is.readUTF();
+               if (line.equals("OK")) 
+               {
+                 Log.v("vDEBUG: ", "DGPS OK!!");
+                 IsOK = 2;
+                 dmlist.updatedata();
+                 break;
+               }
+             }
+             is.close();
+            }
+            if (function  == 5)
+            {
+              //傳送字串座標
+              out.writeUTF("UGPS");
+              out.writeUTF(send_s.get(0));
+              out.writeUTF(send_s.get(1));
+              out.writeUTF(send_s.get(2));
+              out.writeUTF(send_s.get(3));
+              out.writeUTF(send_s.get(4));
+
+              // As long as we receive data, server will data back to the client.
+              DataInputStream is = new DataInputStream(client.getInputStream());
+               
+              //是否傳送成功
+              while (true)
+              {
+                line = is.readUTF();
+                if (line.equals("OK")) 
+                {
+                  Log.v("vDEBUG: ", "SetGPSRange OK!!");
+                  IsOK = 2;
+                  agps.msg_ok();
+                  break;
+                }
+              }
+              is.close();
+             }
             
         } catch (java.io.IOException e) {
           e.printStackTrace();
@@ -193,7 +244,13 @@ public class SendDataSocket extends Thread
         timeout++;
         if (timeout > 10)
         {
-          agps.msg_fail();
+          if (agps != null)
+            agps.msg_fail();
+          //else if (MonitorMap != null)
+            //MonitorMap.msg_fail();
+          else if (dmlist != null)
+            dmlist.msg_fail();       
+          
           Log.i("...", "timeout");
           break;
         }

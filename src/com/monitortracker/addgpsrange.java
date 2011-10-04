@@ -13,6 +13,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.List; 
 import java.util.Locale; 
@@ -32,6 +33,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.Context; 
 import android.content.DialogInterface;
 import android.content.Intent; 
@@ -56,6 +59,7 @@ import android.widget.Button;
 import android.widget.EditText; 
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 //import android.widget.Toast;
 
@@ -74,6 +78,10 @@ public class addgpsrange extends MapActivity
   
   private static final int MENU_MANAGE = Menu.FIRST  ;
   private static final int MENU_EXIT = Menu.FIRST +1 ;
+  
+  static final int ID_TIMEPICKER = 1;
+  
+  private String TAG = "addgpsrange";
 
   public String gpsrange;
   private TextView name;
@@ -106,12 +114,24 @@ public class addgpsrange extends MapActivity
   public TextView label;
   private int port;
   
+  private int shour, sminute;
+  private int dhour, dminute;
+  
+  private int umode;
+  private int ctimer;
+  
   @Override 
   protected void onCreate(Bundle icicle) 
   { 
     // TODO Auto-generated method stub 
     super.onCreate(icicle); 
-    setContentView(R.layout.addgpsrange); 
+    setContentView(R.layout.addgpsrange);
+    
+    umode = -1;
+    
+    Bundle bundle = this.getIntent().getExtras();
+    if (bundle != null)
+      umode = bundle.getInt("cint");
 
     IPAddress = MyGoogleMap.my.IPAddress;
     port = MyGoogleMap.my.port;
@@ -124,7 +144,67 @@ public class addgpsrange extends MapActivity
     name = (TextView) findViewById(R.id.name);
     stime = (TextView) findViewById(R.id.stime_text);
     dtime = (TextView) findViewById(R.id.dtime_text);
-    gpsrange="";
+    gpsrange = "";
+    
+    if (umode != -1)
+    {
+      name.setText(mlist.grs.get(umode).name);
+      stime.setText(mlist.grs.get(umode).stime);
+      dtime.setText(mlist.grs.get(umode).dtime);
+      gpsrange = mlist.grs.get(umode).gpsdata;
+
+      StringTokenizer Tok = new StringTokenizer(mlist.grs.get(umode).stime, ":");
+      int i=0;
+      while (Tok.hasMoreElements())
+      {
+        if (i == 0)
+        {
+         shour = Integer.valueOf((String) Tok.nextElement());
+        }
+        else if (i == 1)
+        {
+          sminute = Integer.valueOf((String) Tok.nextElement());          
+        }
+        i++;
+      }
+
+      Tok = new StringTokenizer(mlist.grs.get(umode).dtime, ":");
+      i=0;
+      while (Tok.hasMoreElements())
+      {
+        if (i == 0)
+        {
+         dhour = Integer.valueOf((String) Tok.nextElement());
+        }
+        else if (i == 1)
+        {
+          dminute = Integer.valueOf((String) Tok.nextElement());          
+        }
+        i++;
+      }
+      
+      Tok = new StringTokenizer(gpsrange, ",");
+      double GPSData[] = new double[8];
+      i=0;
+      while (Tok.hasMoreElements())
+      {
+        GPSData[i] = Double.valueOf((String) Tok.nextElement());
+        i++;
+      }
+      
+      top_left = new GeoPoint((int)(GPSData[0] * 1e6),
+          (int)(GPSData[1] * 1e6));
+      top_right = new GeoPoint((int)(GPSData[2] * 1e6),
+          (int)(GPSData[3] * 1e6));
+      bottom_left = new GeoPoint((int)(GPSData[4] * 1e6),
+          (int)(GPSData[5] * 1e6));
+      bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
+          (int)(GPSData[7] * 1e6));
+      
+      overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
+      Log.i(TAG, "loading edit data");
+      //sendtoChildTracker
+    }       
     
     //參數設定 
     mMapView.setSatellite(false);
@@ -156,33 +236,93 @@ public class addgpsrange extends MapActivity
       } 
     }); 
 
-    mButton02 = (Button)findViewById(R.id.add_button); 
+    mButton02 = (Button)findViewById(R.id.add_button);
+    if (umode != -1)
+    {
+      mButton02.setText("更新");
+    }
+
     mButton02.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
       {
-        String cname = name.getText().toString();
-        String sctime = stime.getText().toString();
-        String dctime = dtime.getText().toString();
-        if (!gpsrange.equals("") && !cname.equals("") 
-                        && !sctime.equals("") &&  !dctime.equals(""))
+        if (umode == -1)
         {
-          //sending
-          SendGPSData(cname, sctime, dctime, gpsrange);
+          String cname = name.getText().toString();
+          String sctime = stime.getText().toString();
+          String dctime = dtime.getText().toString();
+          
+          if (!gpsrange.equals("") && !cname.equals("") 
+                          && !sctime.equals("") &&  !dctime.equals(""))
+          {
+            //sending
+            SendGPSData(cname, sctime, dctime, gpsrange, null);
+          }
         }
-        
+        else
+        {
+          String cid = mlist.grs.get(umode).id;
+          String cname = name.getText().toString();
+          String sctime = stime.getText().toString();
+          String dctime = dtime.getText().toString();
+          if (!gpsrange.equals("") && !cname.equals("") 
+                          && !sctime.equals("") &&  !dctime.equals(""))
+          {
+            //sending
+            SendGPSData(cname, sctime, dctime, gpsrange, cid);
+          }          
+        }
       } 
     }); 
-
+    
     mButton03 = (Button)findViewById(R.id.cancel_button); 
     mButton03.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
       {
+        Intent open = new Intent();
+        
+        open.setClass(addgpsrange.this, mlist.class);
+        startActivity(open);  
+        addgpsrange.this.finish();        
+      } 
+    });
+    
+    mButton04 = (Button)findViewById(R.id.stime_button); 
+    mButton04.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        if (umode == -1)
+        {
+          final Calendar c = Calendar.getInstance();
+          shour = c.get(Calendar.HOUR_OF_DAY);
+          sminute = c.get(Calendar.MINUTE);
+        }       
+        
+        ctimer=0;
+        showDialog(ID_TIMEPICKER);        
         
       } 
     }); 
 
+    mButton05 = (Button)findViewById(R.id.dtime_button); 
+    mButton05.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        if (umode == -1)
+        {
+          final Calendar c = Calendar.getInstance();
+          dhour = c.get(Calendar.HOUR_OF_DAY);
+          dminute = c.get(Calendar.MINUTE);
+        }       
+
+        ctimer=1;
+        showDialog(ID_TIMEPICKER);        
+      } 
+    }); 
+    
     Log.v("IPADDRESS", getLocalIpAddress());
     
     //Open Server Socket, for trakcer傳來的資料
@@ -200,12 +340,51 @@ public class addgpsrange extends MapActivity
     }*/
   }
   
+  @Override
+  protected Dialog onCreateDialog(int id) {
+   // TODO Auto-generated method stub
+   switch(id)
+   {
+     case ID_TIMEPICKER:
+       if (ctimer == 0)
+         return new TimePickerDialog(this,
+       myTimeSetListener,  shour, sminute, true);
+       else
+         return new TimePickerDialog(this,
+             myTimeSetListener,  dhour, dminute, true);
+
+    default:
+     return null;
+     
+   }
+  }
+
+  private TimePickerDialog.OnTimeSetListener myTimeSetListener
+  = new TimePickerDialog.OnTimeSetListener(){
+
+ @Override
+ public void onTimeSet(TimePicker view, int hourOfDay, int minute) 
+ {
+  // TODO Auto-generated method stub
+   String time;
+   if (ctimer == 0)
+   {
+     time = String.valueOf(hourOfDay) + ":"  + String.valueOf(minute);
+     stime.setText(time);
+   }
+   else if (ctimer == 1)
+   {
+     time = String.valueOf(hourOfDay) + ":"  + String.valueOf(minute);     
+     dtime.setText(time);
+   }
+ }
+};
+
+  
   public boolean onCreateOptionsMenu(Menu menu)
   {
     super.onCreateOptionsMenu(menu);
     
-    menu.add(0 , MENU_MANAGE, 0 ,R.string.menu_start).setIcon(R.drawable.start)
-    .setAlphabeticShortcut('S');
     menu.add(0 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
     .setAlphabeticShortcut('E');
   
@@ -217,22 +396,19 @@ public class addgpsrange extends MapActivity
   {    
     switch (item.getItemId())
       { 
-          case MENU_MANAGE: 
-            Intent open = new Intent();
-             
-            open.setClass(addgpsrange.this, mlist.class);
-            startActivity(open);
-
-            return true;
-      
           case MENU_EXIT:
+            Intent open = new Intent();
+            
+            open.setClass(addgpsrange.this, mlist.class);
+            startActivity(open);  
+            addgpsrange.this.finish();       
     
-             break ;
+            break ;
       }
     
   return true ;
   }
-
+  
   public List<MapLocation> getMapLocations(boolean doit) 
   {
     if (mapLocations == null || doit == true) 
@@ -262,17 +438,24 @@ public class addgpsrange extends MapActivity
   }
   
   //傳送GPS Range座標出去給Tracker
-  public void SendGPSData(String name, String gpsdata, String st, String dt)
+  public void SendGPSData(String name, String gpsdata, String st, String dt, String cid)
   {
     sData = new SendDataSocket(this);
     //handler: data
+    if (cid != null)
+      sData.addstring(cid);
+      
     sData.addstring(name);
     sData.addstring(gpsdata);
     sData.addstring(st);
     sData.addstring(dt);
 
     sData.SetAddressPort(IPAddress , port);
-    sData.SetFunction(1); 
+    if (umode == -1)
+      sData.SetFunction(1);
+    else
+      sData.SetFunction(5);
+    
     sData.start();
   }
   
@@ -377,16 +560,16 @@ public class addgpsrange extends MapActivity
     myHandler.sendMessage(msg);       
   }
   
-  //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
+  //處理HANDER: 傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {
         switch(msg.what)
         {
           case MSG_DIALOG_SUCCESS:
-                openOptionsDialog("新增成功");
+                openOptionsDialog("成功");
                 break;
           case MSG_DIALOG_FAIL:
-                openOptionsDialog("新增失敗");
+                openOptionsDialog("失敗");
                 break;
           default:
                 openOptionsDialog(Integer.toString(msg.what));

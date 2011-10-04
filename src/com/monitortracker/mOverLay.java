@@ -386,6 +386,8 @@ public class mOverLay  extends Overlay {
 	//³]©wGPS Range®y¼Ð
 	public void SetPoint(GeoPoint G1, GeoPoint G2, GeoPoint G3, GeoPoint G4)
 	{
+	  gp.clear();
+	  
     gp.add(G1);
     gp.add(G2);
     gp.add(G3);
