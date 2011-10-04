@@ -203,7 +203,7 @@ public class SendDataSocket extends Thread
                {
                  Log.v("vDEBUG: ", "DGPS OK!!");
                  IsOK = 2;
-                 dmlist.updatedata();
+                 dmlist.updategui();
                  break;
                }
              }

@@ -132,7 +132,7 @@ public class MyGoogleMap extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.173.101";
+    IPAddress ="192.168.173.100";
     port = 12341;
     mshow = false;
     

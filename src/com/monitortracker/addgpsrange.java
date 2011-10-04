@@ -560,6 +560,7 @@ public class addgpsrange extends MapActivity
     myHandler.sendMessage(msg);       
   }
   
+  
   //處理HANDER: 傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {

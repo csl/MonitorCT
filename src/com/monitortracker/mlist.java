@@ -45,6 +45,7 @@ public class mlist extends Activity
 
   private static final int MSG_DIALOG_SUCCESS = 1;  
   private static final int MSG_DIALOG_FAIL = 2;
+  private static final int MSG_DIALOG_UGUI = 3;
   
   public int cindex;
   
@@ -68,9 +69,9 @@ protected void onCreate(Bundle icicle)
     updatedata();
     
     sData = new SendDataSocket(this);
-    //sData.SetAddressPort(IPAddress , port);
-    //sData.SetFunction(3); 
-    //sData.start();
+    sData.SetAddressPort(IPAddress , port);
+    sData.SetFunction(3); 
+    sData.start();
     
 
     gpslist.setOnItemClickListener(new OnItemClickListener() 
@@ -142,9 +143,9 @@ public boolean onContextItemSelected(MenuItem aItem)
   public void deleteList()
   {
     sData = new SendDataSocket(this);
-    //sData.SetAddressPort(IPAddress , port);
-    //sData.SetFunction(4); 
-    //sData.start();    
+    sData.SetAddressPort(IPAddress , port);
+    sData.SetFunction(4); 
+    sData.start();    
   }
 
   public void recGPSRange(String id, String name, String dgps, String stime, String dtime)
@@ -188,6 +189,15 @@ public boolean onContextItemSelected(MenuItem aItem)
     myHandler.sendMessage(msg);       
   }
   
+  void updategui()
+  {
+    //Over range
+    Message msg = new Message();
+    msg.what = MSG_DIALOG_UGUI;
+    myHandler.sendMessage(msg);       
+  }
+
+  
   //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {
@@ -199,8 +209,12 @@ public boolean onContextItemSelected(MenuItem aItem)
           case MSG_DIALOG_FAIL:
                 openOptionsDialog("失敗");
                 break;
+          case MSG_DIALOG_UGUI:
+                //openOptionsDialog("失敗");
+                break;
+                
           default:
-                openOptionsDialog(Integer.toString(msg.what));
+                //openOptionsDialog(Integer.toString(msg.what));
         }
         super.handleMessage(msg);
     }
