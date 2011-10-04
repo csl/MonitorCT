@@ -73,7 +73,6 @@ protected void onCreate(Bundle icicle)
     sData.SetFunction(3); 
     sData.start();
     
-
     gpslist.setOnItemClickListener(new OnItemClickListener() 
     {  
          public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,  
@@ -177,8 +176,9 @@ public boolean onContextItemSelected(MenuItem aItem)
               R.layout.mlistview,
               new String[] {"ItemTitle", "ItemText"}, 
               new int[] {R.id.ItemTitle,R.id.ItemText});
-      
+
     gpslist.setAdapter(m);
+    m.notifyDataSetChanged();
   }
   
   void msg_fail()
@@ -191,12 +191,21 @@ public boolean onContextItemSelected(MenuItem aItem)
   
   void updategui()
   {
+    Intent open = new Intent();
+    open.setClass(mlist.this, mlist.class);
+    startActivity(open);                
+    mlist.this.finish();
+    
+  }
+ 
+  void update()
+  {
     //Over range
     Message msg = new Message();
     msg.what = MSG_DIALOG_UGUI;
     myHandler.sendMessage(msg);       
   }
-
+ 
   
   //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
@@ -210,9 +219,8 @@ public boolean onContextItemSelected(MenuItem aItem)
                 openOptionsDialog("失敗");
                 break;
           case MSG_DIALOG_UGUI:
-                //openOptionsDialog("失敗");
+                updatedata();
                 break;
-                
           default:
                 //openOptionsDialog(Integer.toString(msg.what));
         }

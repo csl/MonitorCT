@@ -184,7 +184,7 @@ public class SendDataSocket extends Thread
               }
               is.close();
               
-              dmlist.updatedata();
+              dmlist.update();
             }            
             if (function == 4)
             {
@@ -208,6 +208,7 @@ public class SendDataSocket extends Thread
                }
              }
              is.close();
+             
             }
             if (function  == 5)
             {
