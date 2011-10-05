@@ -35,6 +35,7 @@ import android.app.AlertDialog;
 import android.content.Context; 
 import android.content.DialogInterface;
 import android.content.Intent; 
+import android.graphics.Color;
 //import android.graphics.drawable.Drawable;
 import android.location.Address; 
 import android.location.Criteria; 
@@ -68,9 +69,12 @@ import com.google.android.maps.MapView;
 //import com.google.android.maps.OverlayItem;
 
 public class MyGoogleMap extends MapActivity 
-{ 
+{
+  private String TAG = "MyGoogleMap";
+  
   private static final int MSG_DIALOG_SAFE = 1;  
   private static final int MSG_DIALOG_OVERRANGE = 2;
+  private static final int MSG_DIALOG_SETS = 3;
   
   private static final int MENU_MANAGE = Menu.FIRST  ;
   private static final int MENU_EXIT = Menu.FIRST +1 ;
@@ -78,7 +82,7 @@ public class MyGoogleMap extends MapActivity
   //private TextView mTextView01;
   static public MyGoogleMap my;
   private MyGoogleMap mMyGoogleMap = this;
-  private Timer timer = new Timer();
+  private Timer timer;
   private SocketServer s_socket = null;
   
   private MapController mMapController01; 
@@ -106,6 +110,10 @@ public class MyGoogleMap extends MapActivity
   public boolean mshow;
   public int port;
   public TextView label;
+  public String oldGPSRangeData;
+  
+  private medplayer mp;
+  static private int display = 0;
   
   @Override 
   protected void onCreate(Bundle icicle) 
@@ -114,8 +122,13 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
 
-    my = this;
+    oldGPSRangeData = "";
 
+    timer = new Timer();
+    
+    my = this;
+    mp = null;
+    
     //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
@@ -132,62 +145,83 @@ public class MyGoogleMap extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.173.100";
+    IPAddress ="192.168.123.101";
     port = 12341;
     mshow = false;
     
     //顯示輸入IP的windows
-    final EditText input = new EditText(mMyGoogleMap);
-    input.setText(IPAddress);
-    AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
+    if (display != 1)
+    {
+      final EditText input = new EditText(mMyGoogleMap);
+      input.setText(IPAddress);
+      AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
 
     //openOptionsDialog(getLocalIpAddress());
-    
-    alert.setTitle("設定Child Phone IP");
-    alert.setMessage("請輸入Child Phone IP位置");
-    
-    // Set an EditText view to get user input 
-    alert.setView(input);
-    
-    alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-    public void onClick(DialogInterface dialog, int whichButton) 
-    {
-      try
+
+      alert.setTitle("設定Child Phone IP");
+      alert.setMessage("請輸入Child Phone IP位置");
+        
+      // Set an EditText view to get user input 
+      alert.setView(input);
+      
+      alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+      public void onClick(DialogInterface dialog, int whichButton) 
       {
-        IPAddress = input.getText().toString();  
-        //timer.schedule(new DateTask(), 0, 1000);     
+        try
+        {
+          display = 1;
+          IPAddress = input.getText().toString();  
+          timer.schedule(new DateTask(), 0, 3000);    
+        }
+        catch (Exception e)
+        {
+          e.printStackTrace();
+        }
+        //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
       }
-      catch (Exception e)
-      {
-        e.printStackTrace();
-      }
-      //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+      });
+    
+      alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int whichButton) {
+            // Canceled.
+          }
+        });
+    
+        alert.show();      
     }
-    });
-
-    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int whichButton) {
-        // Canceled.
-      }
-    });
-
-    alert.show();      
-    
+    else
+    {
+      timer.schedule(new DateTask(), 0, 3000);    
+    }
+        
     //mLocationManager01.requestLocationUpdates 
     //(strLocationProvider, 2000, 10, mLocationListener01); 
      
+    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
+
     //建構畫在GoogleMap的overlay
     overlay = new MyOverLay(this);
     mMapView.getOverlays().add(overlay);
-    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
 
-    //按下清除座標
+    //按下軌跡
     mButton01 = (Button)findViewById(R.id.myButton1); 
     mButton01.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
       { 
-        overlay.clearRange();
+        //overlay.clearRange();
+        String str = mButton01.getText().toString();
+        
+        if (str.equals("開啟軌跡"))
+        {
+          mButton01.setText("關軌跡");
+          overlay.setTracker(true);
+        }
+        else
+        {
+          mButton01.setText("開啟軌跡");
+          overlay.setTracker(false);
+        }
       } 
     }); 
      
@@ -249,27 +283,6 @@ public class MyGoogleMap extends MapActivity
       } 
     }); 
 
-    //重新設定IPAddress
-    mButton05 = (Button)findViewById(R.id.myButton5); 
-    mButton05.setOnClickListener(new Button.OnClickListener() 
-    { 
-      public void onClick(View v) 
-      {
-        String str = mButton05.getText().toString();
-        
-        if (str.equals("開啟軌跡"))
-        {
-          mButton05.setText("關軌跡");
-          overlay.setTracker(true);
-        }
-        else
-        {
-          mButton05.setText("開啟軌跡");
-          overlay.setTracker(false);
-        }
-      } 
-    });
-
     Log.v("IPADDRESS", getLocalIpAddress());
     
     //Open Server Socket, for trakcer傳來的資料
@@ -310,13 +323,15 @@ public class MyGoogleMap extends MapActivity
             Intent open = new Intent();
              
             open.setClass(MyGoogleMap.this, mlist.class);
+            timer.cancel();
+            MyGoogleMap.this.finish();
             startActivity(open);
-
             return true;
       
           case MENU_EXIT:
-    
-             break ;
+            timer.cancel();
+            MyGoogleMap.this.finish();
+            break ;
       }
     
   return true ;
@@ -477,17 +492,80 @@ public class MyGoogleMap extends MapActivity
     return null;
   }
   
+  void GPSRhander(String gpsdata)
+  {
+    if ( gpsdata != null )
+    {
+      StringTokenizer Tok = new StringTokenizer(gpsdata, ",");
+      double GPSData[] = new double[8];
+      int i=0;
+      while (Tok.hasMoreElements())
+      {
+        GPSData[i] = Double.valueOf((String) Tok.nextElement());
+        i++;
+      }
+      
+      top_left = new GeoPoint((int)(GPSData[0] * 1e6),
+          (int)(GPSData[1] * 1e6));
+      top_right = new GeoPoint((int)(GPSData[2] * 1e6),
+          (int)(GPSData[3] * 1e6));
+      bottom_left = new GeoPoint((int)(GPSData[4] * 1e6),
+          (int)(GPSData[5] * 1e6));
+      bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
+          (int)(GPSData[7] * 1e6));
+      
+      overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
+      Log.i(TAG, "GPSData set OK");
+    }
+    else
+    {
+      overlay.clearRange();
+    }
+  }
+  
+  void setStatus()
+  {
+    Message msg = new Message();
+    msg.what = MSG_DIALOG_SETS;
+    myHandler.sendMessage(msg);      
+  }
+  
   //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {
         switch(msg.what)
         {
           case MSG_DIALOG_SAFE:
-                label.setText("安全");
+                label.setTextColor(Color.BLACK);
+                if (overlay.getGPSRangeSize() != 0)
+                  label.setText("安全/設置範圍");
+                else
+                  label.setText("安全/未設置範圍");
+                  
+                if (mp != null)
+                {
+                  mp.stop_voice();
+                  mp = null;
+                }
                 break;
           case MSG_DIALOG_OVERRANGE:
-                label.setText("超出");
+                label.setTextColor(Color.RED);
+                label.setText("超出設置範圍");
+                
+                if (mp == null)
+                {
+                  //voice
+                  mp = new medplayer();
+                  mp.play_voice("warn.mp3");
+                }
                 break;
+          case MSG_DIALOG_SETS:
+            if (overlay.getGPSRangeSize() != 0)
+              label.setText("安全/設置範圍");
+            else
+              label.setText("安全/未設置範圍");
+            break;
+            
           default:
                 label.setText(Integer.toString(msg.what));
         }

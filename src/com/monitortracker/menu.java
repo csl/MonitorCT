@@ -63,6 +63,7 @@ public class menu extends ListActivity
           case MENU_START: 
 	     //«ömenu->¶}±ÒClass MyGoogleMap	  
              intent.setClass(menu.this,MyGoogleMap.class);
+             menu.this.finish();
              startActivity(intent);
              return true;
       

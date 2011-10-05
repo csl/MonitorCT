@@ -3,6 +3,8 @@ package com.monitortracker;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.monitortracker.MyGoogleMap.DateTask;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -14,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.ContextMenu;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -30,6 +33,7 @@ import android.util.Log;
 
 public class mlist extends Activity
 {
+  private static final int MENU_EXIT = Menu.FIRST;
 
   String newitem;
   private ArrayList<HashMap<String, String>> mrlist;
@@ -86,6 +90,20 @@ protected void onCreate(Bundle icicle)
               startActivity(open);  
               mlist.this.finish();
             }
+            else
+            {
+              cindex = arg2 - 1;
+              
+              Intent open = new Intent();
+              Bundle bundle = new Bundle();
+              
+              bundle.putInt("cindex", cindex);
+              open.setClass(mlist.this, addgpsrange.class);
+              open.putExtras(bundle);
+              
+              mlist.this.finish();
+              startActivity(open);                
+            }
           }  
       });
       
@@ -97,7 +115,6 @@ protected void onCreate(Bundle icicle)
              menu.setHeaderTitle("¾Þ§@");
              menu.add(0, CONTEXTMENU_EDIT, 0 , "Edit"); 
              menu.add(0, CONTEXTMENU_DELETE, 1 , "Delete"); 
-           
           }  
       });   
     
@@ -126,8 +143,8 @@ public boolean onContextItemSelected(MenuItem aItem)
                    open.setClass(mlist.this, addgpsrange.class);
                    open.putExtras(bundle);
                    
-                   startActivity(open);                
                    mlist.this.finish();
+                   startActivity(open);                
 
                    return true; /* true means: "we handled the event". */
                     
@@ -146,6 +163,34 @@ public boolean onContextItemSelected(MenuItem aItem)
     sData.SetFunction(4); 
     sData.start();    
   }
+  
+  public boolean onCreateOptionsMenu(Menu menu)
+  {
+    super.onCreateOptionsMenu(menu);
+    
+    menu.add(0 , MENU_EXIT, 1 ,R.string.menu_exit)
+    .setAlphabeticShortcut('E');
+  
+     return true;  
+  }
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item)
+  {
+    switch (item.getItemId())
+      { 
+          case MENU_EXIT:
+            Intent open = new Intent();
+            
+            open.setClass(mlist.this, MyGoogleMap.class);
+            mlist.this.finish();
+            startActivity(open);
+            break ;
+      }
+    
+  return true ;
+  }
+
 
   public void recGPSRange(String id, String name, String dgps, String stime, String dtime)
   {

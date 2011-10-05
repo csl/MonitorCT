@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.io.BufferedInputStream;
@@ -19,6 +20,7 @@ import android.util.Log;
 public class SendDataSocket extends Thread 
 {
 
+  private String TAG = "SendDataSocket";
 	private String address;
 	private int port;
 	private int function;
@@ -129,8 +131,14 @@ public class SendDataSocket extends Thread
              }
             else if (function  == 2)
             {
+              int shour, sminute;
+              final Calendar c = Calendar.getInstance();
+              shour = c.get(Calendar.HOUR_OF_DAY);
+              sminute = c.get(Calendar.MINUTE);
+              
               //傳送字串座標
               out.writeUTF("nowStatus");
+              out.writeUTF(shour + ":" + sminute);
 
               // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
@@ -138,30 +146,67 @@ public class SendDataSocket extends Thread
               line = is.readUTF();
               Log.v("vDEBUG: ", "vClient " + line);
               if (!line.equals("NoStatus"))
-                {
+              {
                 StringTokenizer Tok = new StringTokenizer(line, ",");
                 double GPSData[] = new double[3];
                 int i=0;
                 while (Tok.hasMoreElements())
-                 {
+                {
                   GPSData[i] = Double.valueOf((String) Tok.nextElement());
                   i++;
-                 }      
+                }      
                  
                 //若有3個參數, 代表超過range
                 if (i == 3)
-                 {
+                {
                   //送出更新座標, 要求顯示超過req給MyGoogle.java
                   MonitorMap.refreshDouble2Geo(GPSData[0], GPSData[1], 1);
-                 } 
-               else
-                 {
+                } 
+                else
+                {
                   //送出更新座標給MyGoogle.java
                   MonitorMap.refreshDouble2Geo(GPSData[0], GPSData[1], 0);
-                 }
+                }
               }
+              line = is.readUTF();
+              
+              if (line.equals("nowGPSRange"))
+              {
+                String cname, cgps, cstime, cdtime;
+                
+                cname = is.readUTF();
+                cgps = is.readUTF();
+                cstime = is.readUTF();
+                cdtime = is.readUTF();
+
+                if (MonitorMap.oldGPSRangeData.equals(""))
+                {
+                  
+                  Log.i(TAG, "get: " +cgps);
+                  MonitorMap.oldGPSRangeData = cgps;
+                  MonitorMap.GPSRhander(cgps);
+                  MonitorMap.setStatus();
+                  
+                }
+                else if (!MonitorMap.oldGPSRangeData.equals(cgps))
+                {
+                  Log.i(TAG, "get: " + cgps);
+                  MonitorMap.oldGPSRangeData = "";
+                  MonitorMap.GPSRhander(cgps);
+                  MonitorMap.setStatus();
+                }
+                else
+                  MonitorMap.setStatus();
+                
+              }
+              else if (line.equals("NoGPSRange"))
+              {
+                Log.i(TAG, "nogpsrange");
+                MonitorMap.GPSRhander(null);
+              }            
+              
               is.close();
-             }
+            }
             else if (function  == 3)
             {
               String cid, cname, cgps, cstime, cdtime;

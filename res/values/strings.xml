@@ -58,11 +58,11 @@
 	<!-- 主程式 -->
   <string name="str_longitude">經度(Longitude)：</string> 
   <string name="str_latitude">緯度(Latitude)：</string> 
-  <string name="str_button1">清除選取</string> 
+  <string name="str_button1">開啟軌跡</string> 
   <string name="str_button2">+</string> 
   <string name="str_button3">-</string>
   <string name="str_button4">衛星</string>  
-  <string name="str_button5">開啟軌跡</string>  
+  <string name="str_button5"></string>  
   <string name="str_button6">現在位置</string>  
   <string name="str_button7">關軌跡</string>  
   

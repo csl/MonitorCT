@@ -146,12 +146,32 @@ public class addgpsrange extends MapActivity
     dtime = (TextView) findViewById(R.id.dtime_text);
     gpsrange = "";
     
+    //把计砞﹚ 
+    mMapView.setSatellite(false);
+    mMapView.setStreetView(true);
+    mMapView.setEnabled(true);
+    mMapView.setClickable(true);
+     
+    intZoomLevel = 15; 
+    mMapController01.setZoom(intZoomLevel); 
+
+    mshow = false;
+    
+    //mLocationManager01.requestLocationUpdates 
+    //(strLocationProvider, 2000, 10, mLocationListener01); 
+     
+    //篶礶GoogleMapoverlay
+    overlay = new mOverLay(this);
+    mMapView.getOverlays().add(overlay);
+    
     if (umode != -1)
     {
       name.setText(mlist.grs.get(umode).name);
       stime.setText(mlist.grs.get(umode).stime);
       dtime.setText(mlist.grs.get(umode).dtime);
       gpsrange = mlist.grs.get(umode).gpsdata;
+      
+      Log.i(TAG, gpsrange);
 
       StringTokenizer Tok = new StringTokenizer(mlist.grs.get(umode).stime, ":");
       int i=0;
@@ -206,23 +226,6 @@ public class addgpsrange extends MapActivity
       //sendtoChildTracker
     }       
     
-    //把计砞﹚ 
-    mMapView.setSatellite(false);
-    mMapView.setStreetView(true);
-    mMapView.setEnabled(true);
-    mMapView.setClickable(true);
-     
-    intZoomLevel = 15; 
-    mMapController01.setZoom(intZoomLevel); 
-
-    mshow = false;
-    
-    //mLocationManager01.requestLocationUpdates 
-    //(strLocationProvider, 2000, 10, mLocationListener01); 
-     
-    //篶礶GoogleMapoverlay
-    overlay = new mOverLay(this);
-    mMapView.getOverlays().add(overlay);
     //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
 
     mButton01 = (Button)findViewById(R.id.clear_button); 

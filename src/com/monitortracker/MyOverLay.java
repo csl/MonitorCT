@@ -125,7 +125,7 @@ public class MyOverLay  extends Overlay {
 		}
 		*/
 		Log.i("TAG", "onTap");
-		
+		/*
 		//看現在記了幾點
 		int newPointSize = gp.size();
 
@@ -194,8 +194,8 @@ public class MyOverLay  extends Overlay {
 		    //傳送給Tracker
 		    mLocationViewers.SendGPSData( str);
 	    }
-		  
 		}
+    */
 
 		/**
 		 *   Return true if we handled this onTap()
@@ -272,6 +272,8 @@ public class MyOverLay  extends Overlay {
       //若要求顯示才顯示
       if (ReadyShowRange == true)
       {
+        Log.i("FUCK", "draw...");
+        
         Paint paint = new Paint();
         Point myScreenCoords1 = new Point();
         Point myScreenCoords2 = new Point();
@@ -416,6 +418,7 @@ public class MyOverLay  extends Overlay {
 	//設定GPS Range座標
 	public void SetPoint(GeoPoint G1, GeoPoint G2, GeoPoint G3, GeoPoint G4)
 	{
+	  gp.clear();
     gp.add(G1);
     gp.add(G2);
     gp.add(G3);
@@ -423,4 +426,10 @@ public class MyOverLay  extends Overlay {
     
     ReadyShowRange = true;
 	}
+	
+	 public int getGPSRangeSize()
+  {
+	   return gp.size();
+  }
+
 }
