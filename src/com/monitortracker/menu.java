@@ -126,8 +126,10 @@ public class menu extends ListActivity
       .setNegativeButton(R.string.str_exit_no,
           new DialogInterface.OnClickListener() {
           
-            public void onClick(DialogInterface dialoginterface, int i) {
+            public void onClick(DialogInterface dialoginterface, int i) 
+            {
               
+
             }
       }
       )
@@ -136,6 +138,7 @@ public class menu extends ListActivity
           new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialoginterface, int i) {
             
+            android.os.Process.killProcess(android.os.Process.myPid());           
             finish();
           }
           

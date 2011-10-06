@@ -330,6 +330,7 @@ public class MyGoogleMap extends MapActivity
       
           case MENU_EXIT:
             timer.cancel();
+            android.os.Process.killProcess(android.os.Process.myPid());           
             MyGoogleMap.this.finish();
             break ;
       }
