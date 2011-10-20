@@ -145,7 +145,7 @@ public class MyGoogleMap extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.123.101";
+    IPAddress ="192.168.0.50";
     port = 12341;
     mshow = false;
     
@@ -171,7 +171,7 @@ public class MyGoogleMap extends MapActivity
         {
           display = 1;
           IPAddress = input.getText().toString();  
-          timer.schedule(new DateTask(), 0, 3000);    
+          timer.schedule(new DateTask(), 0, 60000);    
         }
         catch (Exception e)
         {
@@ -191,7 +191,7 @@ public class MyGoogleMap extends MapActivity
     }
     else
     {
-      timer.schedule(new DateTask(), 0, 3000);    
+      timer.schedule(new DateTask(), 0, 60000);    
     }
         
     //mLocationManager01.requestLocationUpdates 
@@ -202,6 +202,11 @@ public class MyGoogleMap extends MapActivity
     //建構畫在GoogleMap的overlay
     overlay = new MyOverLay(this);
     mMapView.getOverlays().add(overlay);
+    
+    nowGeoPoint = new GeoPoint((int) (24.070801 * 1000000),(int) (120.715486 * 1000000));
+
+    refreshMapViewByGeoPoint(nowGeoPoint, 
+        mMapView, intZoomLevel);
 
     //按下軌跡
     mButton01 = (Button)findViewById(R.id.myButton1); 

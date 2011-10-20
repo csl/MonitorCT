@@ -60,7 +60,6 @@ public class SendDataSocket extends Thread
     send_s = new ArrayList<String>();
   }
 	
-	
 	public void addstring(String add)
 	{
 	  send_s.add(add);
@@ -302,5 +301,6 @@ public class SendDataSocket extends Thread
         }
         
 	  } while (IsOK != 2);
+	  
 	}
 }

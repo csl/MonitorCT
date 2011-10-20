@@ -97,7 +97,7 @@ public class addgpsrange extends MapActivity
   private mOverLay overlay;
   private List<MapLocation> mapLocations;
 
-  private Button mButton01,mButton02,mButton03,mButton04,mButton05;
+  private Button mButton01,mButton02,mButton03,mButton04,mButton05,mButton06,mButton07;
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
   public GeoPoint nowGeoPoint;
   
@@ -131,7 +131,7 @@ public class addgpsrange extends MapActivity
     
     Bundle bundle = this.getIntent().getExtras();
     if (bundle != null)
-      umode = bundle.getInt("cint");
+      umode = bundle.getInt("cindex");
 
     IPAddress = MyGoogleMap.my.IPAddress;
     port = MyGoogleMap.my.port;
@@ -152,7 +152,7 @@ public class addgpsrange extends MapActivity
     mMapView.setEnabled(true);
     mMapView.setClickable(true);
      
-    intZoomLevel = 15; 
+    intZoomLevel = 17; 
     mMapController01.setZoom(intZoomLevel); 
 
     mshow = false;
@@ -163,6 +163,12 @@ public class addgpsrange extends MapActivity
     //建構畫在GoogleMap的overlay
     overlay = new mOverLay(this);
     mMapView.getOverlays().add(overlay);
+    
+    nowGeoPoint = new GeoPoint((int) (24.070801 * 1000000),(int) (120.715486 * 1000000));
+
+    refreshMapViewByGeoPoint(nowGeoPoint, 
+        mMapView, intZoomLevel);
+    
     
     if (umode != -1)
     {
@@ -323,6 +329,34 @@ public class addgpsrange extends MapActivity
 
         ctimer=1;
         showDialog(ID_TIMEPICKER);        
+      } 
+    }); 
+
+    mButton06 = (Button)findViewById(R.id.zoomin_button); 
+    mButton06.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        intZoomLevel++; 
+        if(intZoomLevel>mMapView.getMaxZoomLevel()) 
+        { 
+          intZoomLevel = mMapView.getMaxZoomLevel(); 
+        } 
+        mMapController01.setZoom(intZoomLevel); 
+      } 
+    }); 
+
+    mButton07 = (Button)findViewById(R.id.zoomout_button); 
+    mButton07.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        intZoomLevel--; 
+        if(intZoomLevel<1) 
+        { 
+          intZoomLevel = 1; 
+        } 
+        mMapController01.setZoom(intZoomLevel); 
       } 
     }); 
     
