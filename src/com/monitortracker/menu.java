@@ -9,6 +9,9 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
@@ -18,6 +21,8 @@ public class menu extends ListActivity
   private static final int MENU_START = Menu.FIRST  ;
   private static final int MENU_EXIT = Menu.FIRST +1 ;
   public final String TAG = "";
+  public String user, pwd;
+  public menu mMenu = this;
   
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -60,11 +65,59 @@ public class menu extends ListActivity
     
     switch (item.getItemId())
       { 
-          case MENU_START: 
-	     //按menu->開啟Class MyGoogleMap	  
-             intent.setClass(menu.this,MyGoogleMap.class);
-             menu.this.finish();
-             startActivity(intent);
+          case MENU_START:
+            
+            final EditText euser = new EditText(mMenu);
+            final EditText epwd = new EditText(mMenu);
+            final Spinner lists = new Spinner(mMenu);
+            
+            euser.setText(user);
+            epwd.setText(pwd);
+            
+            AlertDialog.Builder alert = new AlertDialog.Builder(mMenu);
+
+          //openOptionsDialog(getLocalIpAddress());
+
+            alert.setTitle("Login");
+            alert.setMessage("請登入帳號密碼");
+              
+            // Set an EditText view to get user input
+            LinearLayout layout = new LinearLayout(mMenu);
+            layout.addView(euser);
+            layout.addView(epwd);
+            layout.addView(lists);
+            
+            alert.setView(layout);
+            
+            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) 
+            {
+              try
+              {
+                Intent intent = null;
+                intent.setClass(menu.this, Montior.class);
+                menu.this.finish();
+                startActivity(intent);
+                
+                //display = 1;
+                //IPAddress = input.getText().toString();  
+              }
+              catch (Exception e)
+              {
+                e.printStackTrace();
+              }
+              //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+            }
+            });
+          
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                  // Canceled.
+                }
+              });
+          
+             alert.show();      
+            
              return true;
       
           case MENU_EXIT:

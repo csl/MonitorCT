@@ -70,6 +70,7 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView; 
 //import com.google.android.maps.Overlay;
 //import com.google.android.maps.OverlayItem;
+import com.monitortracker.Montior.DateTask;
 
 public class addgpsrange extends MapActivity 
 { 
@@ -86,9 +87,9 @@ public class addgpsrange extends MapActivity
   public String gpsrange;
   private TextView name;
   private TextView stime;
-  private TextView dtime;  
-  static public addgpsrange my;
-  private Timer timer = new Timer();
+  private TextView dtime;
+  
+  static public addgpsrange maddgpsrange;
   //private SocketServer s_socket = null;
   
   private MapController mMapController01; 
@@ -97,12 +98,12 @@ public class addgpsrange extends MapActivity
   private mOverLay overlay;
   private List<MapLocation> mapLocations;
 
+  private Button cchildButton;
   private Button mButton01,mButton02,mButton03,mButton04,mButton05,mButton06,mButton07;
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
   public GeoPoint nowGeoPoint;
   
   private String IPAddress;
-  private SendDataSocket sData;
   public static  MapLocation mSelectedMapLocation;  
   
   public GeoPoint top_left;        
@@ -112,7 +113,6 @@ public class addgpsrange extends MapActivity
   public boolean mshow;
    
   public TextView label;
-  private int port;
   
   private int shour, sminute;
   private int dhour, dminute;
@@ -120,6 +120,10 @@ public class addgpsrange extends MapActivity
   private int umode;
   private int ctimer;
   
+  private String mchildid;
+  
+  static public ArrayList<ChildStruct> childlist;
+
   @Override 
   protected void onCreate(Bundle icicle) 
   { 
@@ -128,13 +132,14 @@ public class addgpsrange extends MapActivity
     setContentView(R.layout.addgpsrange);
     
     umode = -1;
+    mchildid = "";
+    maddgpsrange = this;
     
     Bundle bundle = this.getIntent().getExtras();
     if (bundle != null)
       umode = bundle.getInt("cindex");
 
-    IPAddress = MyGoogleMap.my.IPAddress;
-    port = MyGoogleMap.my.port;
+    IPAddress = (String) this.getResources().getText(R.string.url);
 
     //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
@@ -164,7 +169,7 @@ public class addgpsrange extends MapActivity
     overlay = new mOverLay(this);
     mMapView.getOverlays().add(overlay);
     
-    nowGeoPoint = new GeoPoint((int) (24.070801 * 1000000),(int) (120.715486 * 1000000));
+    nowGeoPoint = Montior.nowGeoPoint;
 
     refreshMapViewByGeoPoint(nowGeoPoint, 
         mMapView, intZoomLevel);
@@ -232,7 +237,57 @@ public class addgpsrange extends MapActivity
       //sendtoChildTracker
     }       
     
-    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
+    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+    
+    cchildButton = (Button)findViewById(R.id.clear_button); 
+    cchildButton.setOnClickListener(new Button.OnClickListener() 
+    { 
+      public void onClick(View v) 
+      { 
+        if (getChildList() != null)
+        {
+         //error
+         if (childlist == null)
+         {
+           return;
+         }          
+         
+         final CharSequence[] child_id = new String[childlist.size()];
+         int checked = 0;
+         
+         if (umode != -1)
+         {
+           checked = Integer.valueOf(mlist.grs.get(umode).child);
+         }
+         
+         for(int i = 0 ;i<childlist.size(); i++)
+         {
+           child_id[i] = childlist.get(i).name; 
+         }
+          
+          AlertDialog.Builder builder = new AlertDialog.Builder(maddgpsrange);
+          builder.setTitle("選擇小孩");  
+           //builder.setCancelable(false);
+          
+          builder.setSingleChoiceItems(child_id, checked, new DialogInterface.OnClickListener() { 
+            public void onClick(DialogInterface dialog, int which) 
+            {
+              mchildid = childlist.get(which).childid;
+            } 
+         }); 
+          
+          builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
+            public void onClick(DialogInterface dialog, int which) 
+            {
+            } 
+         }); 
+           
+         AlertDialog alert = builder.create();  
+         alert.show();
+        }
+      } 
+    }); 
+    
 
     mButton01 = (Button)findViewById(R.id.clear_button); 
     mButton01.setOnClickListener(new Button.OnClickListener() 
@@ -264,21 +319,21 @@ public class addgpsrange extends MapActivity
           if (!gpsrange.equals("") && !cname.equals("") 
                           && !sctime.equals("") &&  !dctime.equals(""))
           {
-            //sending
-            SendGPSData(cname, sctime, dctime, gpsrange, null);
+            SendGPSData(cname, sctime, dctime, gpsrange, null, mchildid);
           }
         }
         else
         {
-          String cid = mlist.grs.get(umode).id;
+          String id = mlist.grs.get(umode).id;
           String cname = name.getText().toString();
           String sctime = stime.getText().toString();
           String dctime = dtime.getText().toString();
+          
           if (!gpsrange.equals("") && !cname.equals("") 
                           && !sctime.equals("") &&  !dctime.equals(""))
           {
             //sending
-            SendGPSData(cname, sctime, dctime, gpsrange, cid);
+            SendGPSData(cname, sctime, dctime, gpsrange, id, mchildid);
           }          
         }
       } 
@@ -359,22 +414,6 @@ public class addgpsrange extends MapActivity
         mMapController01.setZoom(intZoomLevel); 
       } 
     }); 
-    
-    Log.v("IPADDRESS", getLocalIpAddress());
-    
-    //Open Server Socket, for trakcer傳來的資料
-    /*
-    try {
-        s_socket = new SocketServer(serve_port, this);
-        Thread socket_thread = new Thread(s_socket);
-        socket_thread.start();
-    } 
-    catch (IOException e) {
-        e.printStackTrace();
-    }
-    catch (Exception e) {
-        e.printStackTrace();
-    }*/
   }
   
   @Override
@@ -465,8 +504,6 @@ public class addgpsrange extends MapActivity
       MapController myMC = mapview.getController(); 
       myMC.animateTo(gp); 
       myMC.setZoom(zoomLevel); 
-      //mapview.setSatellite(false);
-      
     } 
     catch(Exception e) 
     { 
@@ -475,83 +512,24 @@ public class addgpsrange extends MapActivity
   }
   
   //傳送GPS Range座標出去給Tracker
-  public void SendGPSData(String name, String gpsdata, String st, String dt, String cid)
+  public void SendGPSData(String name, String gpsdata, String st, String dt, String id, String childid)
   {
-    sData = new SendDataSocket(this);
-    //handler: data
-    if (cid != null)
-      sData.addstring(cid);
-      
-    sData.addstring(name);
-    sData.addstring(gpsdata);
-    sData.addstring(st);
-    sData.addstring(dt);
-
-    sData.SetAddressPort(IPAddress , port);
-    if (umode == -1)
-      sData.SetFunction(1);
+    String url_list = "";
+    //insert
+    if (id == null)
+    {
+      url_list = IPAddress + "insert.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
+      "&dtime="  + dt + "&childid=" + childid;
+    }
     else
-      sData.SetFunction(5);
+    {
+      url_list = IPAddress + "insert.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
+      "&dtime="  + dt + "&childid=" + childid + "&id=" + id;
+    }
     
-    sData.start();
+    toweb(url_list);
   }
-  
-  
-  public void getLocationProvider() 
-  { 
-    try 
-    { 
-      Criteria mCriteria01 = new Criteria(); 
-      mCriteria01.setAccuracy(Criteria.ACCURACY_FINE); 
-      mCriteria01.setAltitudeRequired(false); 
-      mCriteria01.setBearingRequired(false); 
-      mCriteria01.setCostAllowed(true); 
-      mCriteria01.setPowerRequirement(Criteria.POWER_LOW); 
-      //strLocationProvider = mLocationManager01.getBestProvider(mCriteria01, true); 
-       
-      //mLocation01 = mLocationManager01.getLastKnownLocation (strLocationProvider); //?
-    } 
-    catch(Exception e) 
-    { 
-      //mTextView01.setText(e.toString()); 
-      e.printStackTrace(); 
-    } 
-  }
-  
- /* private class MyItemOverlay extends ItemizedOverlay<OverlayItem>
-  {
-    private List<OverlayItem> items = new ArrayList<OverlayItem>();
-    public MyItemOverlay(Drawable defaultMarker , GeoPoint gp)
-    {
-      super(defaultMarker);
-      items.add(new OverlayItem(gp,"Title","Snippet"));
-      populate();
-    }
-    
-    @Override
-    protected OverlayItem createItem(int i)
-    {
-      return items.get(i);
-    }
-    
-    @Override
-    public int size()
-    {
-      return items.size();
-    }
-    
-    @Override
-    protected boolean onTap(int pIndex)
-    {
-      Toast.makeText
-      (
-        Flora_Expo.this,items.get(pIndex).getSnippet(),
-        Toast.LENGTH_LONG
-      ).show();
-      return true;
-    }
-  }*/
-   
+
   @Override 
   protected boolean isRouteDisplayed() 
   { 
@@ -597,7 +575,6 @@ public class addgpsrange extends MapActivity
     myHandler.sendMessage(msg);       
   }
   
-  
   //處理HANDER: 傳送Message出來，決定要顯示什麼
   public Handler myHandler = new Handler(){
     public void handleMessage(Message msg) {
@@ -614,7 +591,73 @@ public class addgpsrange extends MapActivity
         }
         super.handleMessage(msg);
     }
-};  
+  };  
+
+  public ArrayList<ChildStruct> getChildList()
+  {
+    String uriAPI = IPAddress + "getchildlist.php";
+    
+    URL url = null;
+    try{
+      url = new URL(uriAPI);
+      
+      SAXParserFactory spf = SAXParserFactory.newInstance();
+      SAXParser sp = spf.newSAXParser();
+      XMLReader xr = sp.getXMLReader();
+      //Using login handler for xml
+      ChildListHandler myHandler = new ChildListHandler();
+      xr.setContentHandler(myHandler);
+      //open connection
+      xr.parse(new InputSource(url.openStream()));
+      //verify OK
+      childlist = myHandler.getContainer().getListItems();
+    }
+    catch(Exception e){
+      e.printStackTrace();
+      return null;
+    }
+    
+    return childlist;
+  }
+
+  public int toweb(String uriAPI)
+  {
+    int error = 0;
+       HttpGet httpRequest = new HttpGet(uriAPI);
+         
+       try
+        {
+            HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+            if(httpResponse.getStatusLine().getStatusCode() == 200)
+            {
+              String strResult = EntityUtils.toString(httpResponse.getEntity());
+            }
+            else
+            {
+              //mTextView1.setText("Error Response: "+httpResponse.getStatusLine().toString());
+            }
+          }
+          catch (ClientProtocolException e)
+          {
+            //mTextView1.setText(e.getMessage().toString());
+            e.printStackTrace();
+            error = 1;
+          }
+          catch (IOException e)
+          {
+            //mTextView1.setText(e.getMessage().toString());
+            e.printStackTrace();
+            error = 1;
+          }
+          catch (Exception e)
+          {
+            //mTextView1.setText(e.getMessage().toString());
+            e.printStackTrace();
+            error = 1;
+          }
+
+         return error;
+  }    
   
   //show message
   public void openOptionsDialog(String info)
@@ -627,7 +670,6 @@ public class addgpsrange extends MapActivity
         {
          public void onClick(DialogInterface dialoginterface, int i)
          {
-           //mshow = false;
          }
          }
         )

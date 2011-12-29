@@ -1,9 +1,20 @@
 package com.monitortracker;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.monitortracker.MyGoogleMap.DateTask;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -40,9 +51,6 @@ public class mlist extends Activity
   static public ArrayList<grstruct> grs;
   private ListView gpslist;
   private String IPAddress;
-  private int port;
-  
-  private SendDataSocket sData;
   
   protected static final int CONTEXTMENU_EDIT = 0;
   protected static final int CONTEXTMENU_DELETE= 1;
@@ -64,19 +72,32 @@ protected void onCreate(Bundle icicle)
     newitem = (String) this.getResources().getText(R.string.new_range);    
     gpslist = (ListView) findViewById(R.id.mlist);
     mrlist = new ArrayList<HashMap<String, String>>();
-    grs = new ArrayList<grstruct>();
-    
     cindex = 0;
     
-    IPAddress = MyGoogleMap.my.IPAddress;
-    port = MyGoogleMap.my.port;
+    //read all data
+    IPAddress = (String) this.getResources().getText(R.string.url);
+    String uriAPI = IPAddress + "getallrange.php";
+    
+    URL url = null;
+    try{
+      url = new URL(uriAPI);
+      
+      SAXParserFactory spf = SAXParserFactory.newInstance();
+      SAXParser sp = spf.newSAXParser();
+      XMLReader xr = sp.getXMLReader();
+      RangeListHandler myHandler = new RangeListHandler();
+      xr.setContentHandler(myHandler);
+      //open connection
+      xr.parse(new InputSource(url.openStream()));
+      grs = myHandler.getContainer().getListItems();
+    }
+    catch(Exception e){
+      e.printStackTrace();
+      return;
+    }
+    
     updatedata();
-    
-    sData = new SendDataSocket(this);
-    sData.SetAddressPort(IPAddress , port);
-    sData.SetFunction(3); 
-    sData.start();
-    
+
     gpslist.setOnItemClickListener(new OnItemClickListener() 
     {  
          public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,  
@@ -156,14 +177,6 @@ public boolean onContextItemSelected(MenuItem aItem)
           return false;
   }
 
-  public void deleteList()
-  {
-    sData = new SendDataSocket(this);
-    sData.SetAddressPort(IPAddress , port);
-    sData.SetFunction(4); 
-    sData.start();    
-  }
-  
   public boolean onCreateOptionsMenu(Menu menu)
   {
     super.onCreateOptionsMenu(menu);
@@ -182,13 +195,19 @@ public boolean onContextItemSelected(MenuItem aItem)
           case MENU_EXIT:
             Intent open = new Intent();
             
-            open.setClass(mlist.this, MyGoogleMap.class);
+            open.setClass(mlist.this, Montior.class);
             mlist.this.finish();
             startActivity(open);
             break ;
       }
     
   return true ;
+  }
+  
+  public void deleteList()
+  {
+    String url_list = IPAddress + "delete.php?id=" + cindex;
+    toweb(url_list);
   }
 
 
@@ -272,6 +291,46 @@ public boolean onContextItemSelected(MenuItem aItem)
         super.handleMessage(msg);
     }
   };
+  
+  public int toweb(String uriAPI)
+  {
+    int error = 0;
+       HttpGet httpRequest = new HttpGet(uriAPI);
+         
+       try
+        {
+            HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+            if(httpResponse.getStatusLine().getStatusCode() == 200)
+            {
+              String strResult = EntityUtils.toString(httpResponse.getEntity());
+            }
+            else
+            {
+              //mTextView1.setText("Error Response: "+httpResponse.getStatusLine().toString());
+            }
+          }
+          catch (ClientProtocolException e)
+          {
+            //mTextView1.setText(e.getMessage().toString());
+            e.printStackTrace();
+            error = 1;
+          }
+          catch (IOException e)
+          {
+            //mTextView1.setText(e.getMessage().toString());
+            e.printStackTrace();
+            error = 1;
+          }
+          catch (Exception e)
+          {
+            //mTextView1.setText(e.getMessage().toString());
+            e.printStackTrace();
+            error = 1;
+          }
+
+         return error;
+  }    
+  
   
   //show message
   public void openOptionsDialog(String info)

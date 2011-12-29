@@ -7,6 +7,12 @@ public class grstruct
   public String gpsdata;
   public String stime;
   public String dtime;
+  public String child;
+
+  public grstruct()
+  {
+
+  }
   
   public grstruct(String cid, String cname, String cgps, String sdtime, String ddtime)
   {
@@ -16,6 +22,4 @@ public class grstruct
     stime = sdtime;
     dtime = ddtime;
   }
-  
-   
 }

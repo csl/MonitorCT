@@ -13,12 +13,14 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.List; 
 import java.util.Locale; 
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -32,6 +34,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context; 
 import android.content.DialogInterface;
 import android.content.Intent; 
@@ -55,7 +58,9 @@ import android.view.MenuItem;
 import android.view.View; 
 import android.widget.Button; 
 import android.widget.EditText; 
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 //import android.widget.Toast;
@@ -68,9 +73,9 @@ import com.google.android.maps.MapView;
 //import com.google.android.maps.Overlay;
 //import com.google.android.maps.OverlayItem;
 
-public class MyGoogleMap extends MapActivity 
+public abstract class Montior extends MapActivity 
 {
-  private String TAG = "MyGoogleMap";
+  private String TAG = "Monitor";
   
   private static final int MSG_DIALOG_SAFE = 1;  
   private static final int MSG_DIALOG_OVERRANGE = 2;
@@ -80,10 +85,8 @@ public class MyGoogleMap extends MapActivity
   private static final int MENU_EXIT = Menu.FIRST +1 ;
 
   //private TextView mTextView01;
-  static public MyGoogleMap my;
-  private MyGoogleMap mMyGoogleMap = this;
+  public Montior mMontior = this;
   private Timer timer;
-  private SocketServer s_socket = null;
   
   private MapController mMapController01; 
   private MapView mMapView; 
@@ -91,15 +94,15 @@ public class MyGoogleMap extends MapActivity
   private MyOverLay overlay;
   private List<MapLocation> mapLocations;
 
-  private Button mButton01,mButton02,mButton03,mButton04,mButton05;
+  private Button mButton01,mButton02,mButton03,mButton04;
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
-  public GeoPoint nowGeoPoint;
-  
+  public static GeoPoint nowGeoPoint; 
   public String IPAddress;
-  private SendDataSocket sData;
-  private SendDataSocket rData;
   
-  private int serve_port = 12341;
+  private TextView tlogin, tpwd;
+  private EditText login, pwd;
+  
+  private String saccount, spwd;  
   
   public static  MapLocation mSelectedMapLocation;  
   
@@ -111,9 +114,17 @@ public class MyGoogleMap extends MapActivity
   public int port;
   public TextView label;
   public String oldGPSRangeData;
-  
+
+  private int mchildid=0;
   private medplayer mp;
   static private int display = 0;
+  
+  private ProgressDialog myDialog;
+  private LoginXMLStruct data;
+  private CSXMLStruct csdata;
+  static public ArrayList<ChildStruct> childlist;
+  
+  private static volatile AtomicBoolean processing = new AtomicBoolean(false);
   
   @Override 
   protected void onCreate(Bundle icicle) 
@@ -122,12 +133,15 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
 
+    IPAddress = (String) this.getResources().getText(R.string.url);
     oldGPSRangeData = "";
 
     timer = new Timer();
-    
-    my = this;
     mp = null;
+    childlist = null;
+    mchildid = -1;
+    
+    mMontior = this;
     
     //googleMAP
     mMapView = (MapView)findViewById(R.id.myMapView1); 
@@ -142,63 +156,162 @@ public class MyGoogleMap extends MapActivity
     mMapView.setEnabled(true);
     mMapView.setClickable(true);
      
-    intZoomLevel = 15; 
+    intZoomLevel = 18; 
     mMapController01.setZoom(intZoomLevel); 
 
-    IPAddress ="192.168.0.50";
-    port = 12341;
-    mshow = false;
-    
     //顯示輸入IP的windows
     if (display != 1)
     {
-      final EditText input = new EditText(mMyGoogleMap);
-      input.setText(IPAddress);
-      AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
+      AlertDialog.Builder alert = new AlertDialog.Builder(mMontior);
 
-    //openOptionsDialog(getLocalIpAddress());
+      alert.setTitle("登入login");
+      alert.setMessage("請輸入帳號 和 密碼");
+      ScrollView sv = new ScrollView(this);
+      LinearLayout ll = new LinearLayout(this);
+      ll.setOrientation(LinearLayout.VERTICAL);
+      sv.addView(ll);
 
-      alert.setTitle("設定Child Phone IP");
-      alert.setMessage("請輸入Child Phone IP位置");
-        
+      tlogin = new TextView(this);
+      tlogin.setText("accout: ");
+      login = new EditText(this);      
+      ll.addView(tlogin);
+      ll.addView(login);
+
+      tpwd = new TextView(this);
+      tlogin.setText("accout: ");
+      pwd = new EditText(this);
+      ll.addView(tpwd);
+      ll.addView(pwd);
+      
       // Set an EditText view to get user input 
-      alert.setView(input);
+      alert.setView(sv);
       
       alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int whichButton) 
       {
-        try
+        saccount = login.getText().toString();
+        spwd = pwd.getText().toString();
+        
+        if (saccount.equals("") || spwd.equals(""))
         {
-          display = 1;
-          IPAddress = input.getText().toString();  
-          timer.schedule(new DateTask(), 0, 60000);    
+            openOptionsDialog("null");
+            return;
         }
-        catch (Exception e)
+
+        //Progress
+        myDialog = ProgressDialog.show
+        (
+            Montior.this,
+            "login",
+            "...",
+            true
+        );
+        
+        new Thread()
         {
-          e.printStackTrace();
-        }
-        //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+          public void run()
+          {
+            
+            String uriAPI = IPAddress + "login.php?username=" + saccount + "&pwd=" + spwd;
+            
+            URL url = null;
+            try{
+              url = new URL(uriAPI);
+              
+              SAXParserFactory spf = SAXParserFactory.newInstance();
+              SAXParser sp = spf.newSAXParser();
+              XMLReader xr = sp.getXMLReader();
+              //Using login handler for xml
+              LoginXMLHandler myHandler = new LoginXMLHandler();
+              xr.setContentHandler(myHandler);
+              //open connection
+              xr.parse(new InputSource(url.openStream()));
+              //verify OK
+              data = myHandler.getParsedData();
+            }
+            catch(Exception e){
+              e.printStackTrace();
+              return;
+            }
+            finally
+            {
+              myDialog.dismiss();
+              
+              try {
+              
+                   if (data.h_chilid.equals(""))
+                   {
+                     Log.i("ERROR", "LOGINFAIL");
+                     finish();
+                   }
+                   else
+                   {
+                     if (getChildList() != null)
+                     {
+                      //error
+                      if (childlist == null)
+                      {
+                        return;
+                      }          
+                      
+                      ArrayList<Integer> ChildData = new  ArrayList<Integer>();
+                      StringTokenizer Tok = new StringTokenizer(data.h_chilid, ",");
+                      while (Tok.hasMoreElements())
+                      {
+                        ChildData.add( Integer.valueOf((String) Tok.nextElement()) );
+                      }
+                      
+                      final CharSequence[] child_id = new String[ChildData.size()];
+                      int checked = 0;
+                      
+                      for(int i = 0 ;i<ChildData.size(); i++)
+                      {
+                        child_id[i] = childlist.get(ChildData.get(i)).name; 
+                      }
+                       
+                       AlertDialog.Builder builder = new AlertDialog.Builder(mMontior);
+                       builder.setTitle("選擇監控小孩");  
+                        //builder.setCancelable(false);
+                       
+                       builder.setSingleChoiceItems(child_id, checked, new DialogInterface.OnClickListener() { 
+                         public void onClick(DialogInterface dialog, int which) 
+                         {
+                           mchildid = which;
+                         } 
+                      }); 
+                       
+                       builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
+                         public void onClick(DialogInterface dialog, int which) 
+                         {
+                           timer.schedule(new DateTask(), 0, 5000);                        
+                         } 
+                      }); 
+                        
+                      AlertDialog alert = builder.create();  
+                      alert.show();
+                     }
+                   }
+               }
+              catch (Exception err)
+              {
+                     err.printStackTrace();
+              }
+             }                 
+           }
+         }.start();                               
       }
       });
     
       alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int whichButton) {
-            // Canceled.
+          public void onClick(DialogInterface dialog, int whichButton) 
+          {
+            finish();
           }
         });
     
         alert.show();      
     }
-    else
-    {
-      timer.schedule(new DateTask(), 0, 60000);    
-    }
         
-    //mLocationManager01.requestLocationUpdates 
-    //(strLocationProvider, 2000, 10, mLocationListener01); 
-     
-    //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());    
-
     //建構畫在GoogleMap的overlay
     overlay = new MyOverLay(this);
     mMapView.getOverlays().add(overlay);
@@ -287,22 +400,6 @@ public class MyGoogleMap extends MapActivity
        }
       } 
     }); 
-
-    Log.v("IPADDRESS", getLocalIpAddress());
-    
-    //Open Server Socket, for trakcer傳來的資料
-    /*
-    try {
-        s_socket = new SocketServer(serve_port, this);
-        Thread socket_thread = new Thread(s_socket);
-        socket_thread.start();
-    } 
-    catch (IOException e) {
-        e.printStackTrace();
-    }
-    catch (Exception e) {
-        e.printStackTrace();
-    }*/
   }
   
   public boolean onCreateOptionsMenu(Menu menu)
@@ -327,16 +424,16 @@ public class MyGoogleMap extends MapActivity
           case MENU_MANAGE: 
             Intent open = new Intent();
              
-            open.setClass(MyGoogleMap.this, mlist.class);
+            open.setClass(Montior.this, mlist.class);
             timer.cancel();
-            MyGoogleMap.this.finish();
+            finish();
             startActivity(open);
             return true;
       
           case MENU_EXIT:
             timer.cancel();
             android.os.Process.killProcess(android.os.Process.myPid());           
-            MyGoogleMap.this.finish();
+            finish();
             break ;
       }
     
@@ -369,16 +466,6 @@ public class MyGoogleMap extends MapActivity
     { 
       e.printStackTrace(); 
     } 
-  }
-  
-  //傳送GPS Range座標出去給Tracker
-  public void SendGPSData(String GPSData)
-  {
-    sData = new SendDataSocket(this);
-    sData.SetAddressPort(IPAddress , port);
-    sData.SetSendData(GPSData);
-    sData.SetFunction(1); 
-    sData.start();
   }
   
   //將Tracker傳來的座標更新&showrange要不要顯示超出或安全
@@ -435,40 +522,6 @@ public class MyGoogleMap extends MapActivity
     } 
   }
   
- /* private class MyItemOverlay extends ItemizedOverlay<OverlayItem>
-  {
-    private List<OverlayItem> items = new ArrayList<OverlayItem>();
-    public MyItemOverlay(Drawable defaultMarker , GeoPoint gp)
-    {
-      super(defaultMarker);
-      items.add(new OverlayItem(gp,"Title","Snippet"));
-      populate();
-    }
-    
-    @Override
-    protected OverlayItem createItem(int i)
-    {
-      return items.get(i);
-    }
-    
-    @Override
-    public int size()
-    {
-      return items.size();
-    }
-    
-    @Override
-    protected boolean onTap(int pIndex)
-    {
-      Toast.makeText
-      (
-        Flora_Expo.this,items.get(pIndex).getSnippet(),
-        Toast.LENGTH_LONG
-      ).show();
-      return true;
-    }
-  }*/
-   
   @Override 
   protected boolean isRouteDisplayed() 
   { 
@@ -582,12 +635,116 @@ public class MyGoogleMap extends MapActivity
   public class DateTask extends TimerTask {
     public void run() 
     {
-      int port = 12341;
-      rData = new SendDataSocket(my);
-      rData.SetAddressPort(IPAddress , port);
-      rData.SetFunction(2); 
-      rData.start();
+      if (!processing.compareAndSet(false, true)) return;
+      
+      int shour, sminute;
+      final Calendar c = Calendar.getInstance();
+      shour = c.get(Calendar.HOUR_OF_DAY);
+      sminute = c.get(Calendar.MINUTE);      
+      
+      String uriAPI = IPAddress + "getchildstatus.php?nowtime=" + shour + ":" + sminute + "&childid=" + mchildid;
+      
+      URL url = null;
+      try{
+        url = new URL(uriAPI);
+        
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParser sp = spf.newSAXParser();
+        XMLReader xr = sp.getXMLReader();
+        //Using login handler for xml
+        CSXMLHandler myHandler = new CSXMLHandler();
+        xr.setContentHandler(myHandler);
+        //open connection
+        xr.parse(new InputSource(url.openStream()));
+        //verify OK
+        csdata = myHandler.getParsedData();
+      }
+      catch(Exception e){
+        e.printStackTrace();
+        return;
+      }
+      
+      //handle gps message
+      if (!csdata.h_nowgps.equals(""))
+      {
+        StringTokenizer Tok = new StringTokenizer(csdata.h_nowgps, ",");
+        double GPSData[] = new double[3];
+        int i=0;
+        while (Tok.hasMoreElements())
+        {
+          GPSData[i] = Double.valueOf((String) Tok.nextElement());
+          i++;
+        }      
+         
+        //若有3個參數, 代表超過range
+        if (i == 3)
+        {
+          //送出更新座標, 要求顯示超過req給MyGoogle.java
+          refreshDouble2Geo(GPSData[0], GPSData[1], 1);
+        } 
+        else
+        {
+          //送出更新座標給MyGoogle.java
+          refreshDouble2Geo(GPSData[0], GPSData[1], 0);
+        }
+      }
+      
+      if (csdata.h_name.equals("nowGPSRange"))
+      {
+        String cname, cgps, cstime, cdtime;
+        
+        cname = csdata.h_name;
+        cgps = csdata.h_rangegps;
+        cstime = csdata.h_stime;
+        cdtime = csdata.h_dtime;
+
+        if (oldGPSRangeData.equals(""))
+        {
+          Log.i(TAG, "get: " +cgps);
+          oldGPSRangeData = cgps;
+          GPSRhander(cgps);
+          setStatus();
+        }
+        else if (!oldGPSRangeData.equals(cgps))
+        {
+          Log.i(TAG, "get: " + cgps);
+          oldGPSRangeData = "";
+          GPSRhander(cgps);
+          setStatus();
+        }
+        else
+          setStatus();
+      }
+
+      processing.set(false);      
     }
+  }
+  
+  public ArrayList<ChildStruct> getChildList()
+  {
+    String uriAPI = IPAddress + "getchildlist.php";
+    
+    URL url = null;
+    try{
+      url = new URL(uriAPI);
+      
+      SAXParserFactory spf = SAXParserFactory.newInstance();
+      SAXParser sp = spf.newSAXParser();
+      XMLReader xr = sp.getXMLReader();
+      //Using login handler for xml
+      ChildListHandler myHandler = new ChildListHandler();
+      xr.setContentHandler(myHandler);
+      //open connection
+      xr.parse(new InputSource(url.openStream()));
+      //verify OK
+      childlist = myHandler.getContainer().getListItems();
+    }
+    catch(Exception e){
+      e.printStackTrace();
+      return null;
+    }
+    
+    return childlist;
   }
   
   //show message

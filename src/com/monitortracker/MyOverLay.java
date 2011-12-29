@@ -33,7 +33,7 @@ public class MyOverLay  extends Overlay {
     
     private Bitmap mNowIcon;
     
-    private MyGoogleMap mLocationViewers;
+    private Montior mLocationViewers;
     
     private Paint	mInnerPaint, mBorderPaint, mTextPaint;
     
@@ -60,7 +60,7 @@ public class MyOverLay  extends Overlay {
 	 */
     
   //建構子, 初始化
-	public MyOverLay(MyGoogleMap mLocationViewers) {
+	public MyOverLay(Montior mLocationViewers) {
 		
 		this.mLocationViewers = mLocationViewers;
 		

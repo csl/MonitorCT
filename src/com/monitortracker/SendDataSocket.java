@@ -25,16 +25,19 @@ public class SendDataSocket extends Thread
 	private int port;
 	private int function;
 	private int IsOK;
-	private MyGoogleMap MonitorMap;
+	private Montior MonitorMap;
   private addgpsrange agps;
+  private menu MenuMain;
   private mlist dmlist;
 	public String error_string;
   public String send_Data;
-	String line;
+  public String line;
+  public String user;
+  public String pwd;
 	
 	public List<String> send_s; 
 	
-	public SendDataSocket(MyGoogleMap map) 
+	public SendDataSocket(Montior map) 
   {
 		IsOK = 0;
 		MonitorMap = map;
@@ -42,6 +45,16 @@ public class SendDataSocket extends Thread
 		dmlist=null;
   }
 
+  public SendDataSocket(menu map) 
+  {
+    IsOK = 0;
+    MenuMain = map;
+    MonitorMap = null;
+    agps=null;
+    dmlist=null;
+  }
+
+	
 	public SendDataSocket(addgpsrange cm) 
   {
     IsOK = 0;
@@ -76,7 +89,15 @@ public class SendDataSocket extends Thread
   {   
     this.send_Data = sdata;
   }	
-	
+
+  
+  public void SetLogin(String muser, String mpwd)
+  {   
+    this.user = muser;
+    this.pwd = muser;
+  } 
+
+  
 	public void SetFunction(int func)
 	{
 		function = func;		
@@ -276,6 +297,29 @@ public class SendDataSocket extends Thread
                   Log.v("vDEBUG: ", "SetGPSRange OK!!");
                   IsOK = 2;
                   agps.msg_ok();
+                  break;
+                }
+              }
+              is.close();
+             }
+            if (function  == 6)
+            {
+              //傳送字串座標
+              out.writeUTF("Login");
+              out.writeUTF(user);
+              out.writeUTF(pwd);
+
+              // As long as we receive data, server will data back to the client.
+              DataInputStream is = new DataInputStream(client.getInputStream());
+               
+              //是否傳送成功
+              while (true)
+              {
+                line = is.readUTF();
+                if (line.equals("OK") || line.equals("FAIL")) 
+                {
+                  Log.v("vDEBUG: ", "SetGPSRange OK!!");
+                  IsOK = 2;
                   break;
                 }
               }
