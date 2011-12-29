@@ -518,12 +518,12 @@ public class addgpsrange extends MapActivity
     //insert
     if (id == null)
     {
-      url_list = IPAddress + "insert.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
+      url_list = IPAddress + "insertrange.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
       "&dtime="  + dt + "&childid=" + childid;
     }
     else
     {
-      url_list = IPAddress + "insert.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
+      url_list = IPAddress + "insertrange.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
       "&dtime="  + dt + "&childid=" + childid + "&id=" + id;
     }
     

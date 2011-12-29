@@ -206,7 +206,7 @@ public boolean onContextItemSelected(MenuItem aItem)
   
   public void deleteList()
   {
-    String url_list = IPAddress + "delete.php?id=" + cindex;
+    String url_list = IPAddress + "deleterange.php?id=" + grs.get(cindex).id;
     toweb(url_list);
   }
 

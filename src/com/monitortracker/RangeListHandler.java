@@ -9,7 +9,7 @@ import android.util.Log;
 public class RangeListHandler extends DefaultHandler
 {
 	//tag
-	private String TAG = "RFood";
+	private String TAG = "RangeListHandler";
 	
 	private final static int ID = 1;
 	private final static int NAME = 2;

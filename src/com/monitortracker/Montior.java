@@ -172,14 +172,16 @@ public abstract class Montior extends MapActivity
       sv.addView(ll);
 
       tlogin = new TextView(this);
-      tlogin.setText("accout: ");
+      tlogin.setText("±b¸¹: ");
       login = new EditText(this);      
+      login.setText("test");
       ll.addView(tlogin);
       ll.addView(login);
 
       tpwd = new TextView(this);
-      tlogin.setText("accout: ");
+      tlogin.setText("±K½X: ");
       pwd = new EditText(this);
+      pwd.setText("test");
       ll.addView(tpwd);
       ll.addView(pwd);
       
@@ -665,7 +667,7 @@ public abstract class Montior extends MapActivity
       }
       
       //handle gps message
-      if (!csdata.h_nowgps.equals(""))
+      if (!csdata.h_nowgps.equals("-1"))
       {
         StringTokenizer Tok = new StringTokenizer(csdata.h_nowgps, ",");
         double GPSData[] = new double[3];
@@ -689,7 +691,7 @@ public abstract class Montior extends MapActivity
         }
       }
       
-      if (csdata.h_name.equals("nowGPSRange"))
+      if (!csdata.h_name.equals("nodata"))
       {
         String cname, cgps, cstime, cdtime;
         
