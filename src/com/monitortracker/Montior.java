@@ -92,7 +92,6 @@ public abstract class Montior extends MapActivity
   private MapView mMapView; 
   
   private MyOverLay overlay;
-  private List<MapLocation> mapLocations;
 
   private Button mButton01,mButton02,mButton03,mButton04;
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
@@ -103,9 +102,7 @@ public abstract class Montior extends MapActivity
   private EditText login, pwd;
   
   private String saccount, spwd;  
-  
-  public static  MapLocation mSelectedMapLocation;  
-  
+   
   public GeoPoint top_left;        
   public GeoPoint top_right;
   public GeoPoint bottom_left;
@@ -440,15 +437,6 @@ public abstract class Montior extends MapActivity
       }
     
   return true ;
-  }
-
-  public List<MapLocation> getMapLocations(boolean doit) 
-  {
-    if (mapLocations == null || doit == true) 
-    {
-      mapLocations = new ArrayList<MapLocation>();
-    }
-    return mapLocations;
   }
  
   //由Tracker送來的座標來更新現在位置

@@ -96,15 +96,13 @@ public class addgpsrange extends MapActivity
   private MapView mMapView; 
   
   private mOverLay overlay;
-  private List<MapLocation> mapLocations;
-
+ 
   private Button cchildButton;
   private Button mButton01,mButton02,mButton03,mButton04,mButton05,mButton06,mButton07;
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
   public GeoPoint nowGeoPoint;
   
   private String IPAddress;
-  public static  MapLocation mSelectedMapLocation;  
   
   public GeoPoint top_left;        
   public GeoPoint top_right;
@@ -483,15 +481,6 @@ public class addgpsrange extends MapActivity
       }
     
   return true ;
-  }
-  
-  public List<MapLocation> getMapLocations(boolean doit) 
-  {
-    if (mapLocations == null || doit == true) 
-    {
-      mapLocations = new ArrayList<MapLocation>();
-    }
-    return mapLocations;
   }
  
   //由Tracker送來的座標來更新現在位置

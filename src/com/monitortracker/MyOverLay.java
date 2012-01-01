@@ -48,8 +48,6 @@ public class MyOverLay  extends Overlay {
 
     private boolean ShowTracker;    
     
-    public MapLocation mSelectedMapLocation;  
-    
     private ArrayList<GeoPoint> tracker; 
 
     private int mRadius=6;
@@ -225,54 +223,13 @@ public class MyOverLay  extends Overlay {
     gp.clear();
   }
 
-  /**
-     * Test whether an information balloon should be displayed or a prior balloon hidden.
-     */
-  private MapLocation getHitMapLocation(MapView	mapView, GeoPoint	tapPoint) {
-    	
-    	/**
-    	 *   Tracking the clicks on MapLocation
-    	 */
-    	MapLocation hitMapLocation = null;
-		
-    	RectF hitTestRecr = new RectF();
-		  Point screenCoords = new Point();
-    	Iterator<MapLocation> iterator = mLocationViewers.getMapLocations(false).iterator();
-    	while(iterator.hasNext()) {
-    		MapLocation testLocation = iterator.next();
-    		
-    		/**
-    		 * This is used to translate the map's lat/long coordinates to screen's coordinates
-    		 */
-    		mapView.getProjection().toPixels(testLocation.getPoint(), screenCoords);
-
-	    	// Create a testing Rectangle with the size and coordinates of our icon
-	    	// Set the testing Rectangle with the size and coordinates of our on screen icon
-    		hitTestRecr.set(-mBubbleIcon.getWidth()/2,-mBubbleIcon.getHeight(),mBubbleIcon.getWidth()/2,0);
-    		hitTestRecr.offset(screenCoords.x,screenCoords.y);
-
-	    	//  At last test for a match between our Rectangle and the location clicked by the user
-    		mapView.getProjection().toPixels(tapPoint, screenCoords);
-    		
-    		if (hitTestRecr.contains(screenCoords.x,screenCoords.y)) {
-    			hitMapLocation = testLocation;
-    			break;
-    		}
-    	}
-    	
-    	//  Finally clear the new MouseSelection as its process finished
-    	tapPoint = null;
-    	
-    	return hitMapLocation; 
-    }
-
+  
     //draw range
     private void drawPointRange(Canvas canvas, MapView mapView, boolean shadow) 
     {
       //若要求顯示才顯示
       if (ReadyShowRange == true)
       {
-        Log.i("FUCK", "draw...");
         
         Paint paint = new Paint();
         Point myScreenCoords1 = new Point();
@@ -310,7 +267,7 @@ public class MyOverLay  extends Overlay {
     private void drawNowGeoMap(Canvas canvas, MapView mapView, boolean shadow) 
     {
       //顯示現在位置
-      if (mLocationViewers.nowGeoPoint != null)
+      if (Montior.nowGeoPoint != null)
       {
         Paint paint = new Paint();
         Point myScreenCoords = new Point();

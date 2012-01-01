@@ -47,9 +47,7 @@ public class mOverLay  extends Overlay {
     private boolean ReadyShowRange;
 
     private boolean ShowTracker;    
-    
-    public MapLocation mSelectedMapLocation;  
-    
+        
     private ArrayList<GeoPoint> tracker; 
 
     private int mRadius=6;
@@ -100,30 +98,7 @@ public class mOverLay  extends Overlay {
   //處理draw map上的圖案
 	public boolean onTap(GeoPoint p, MapView mapView)  {
 		
-		/**
-		 * Track the popup display
-		 */
-		//boolean isRemovePriorPopup = mSelectedMapLocation != null;  
 
-		/**
-		 * Test whether a new popup should display
-		 */
-		/*
-		mSelectedMapLocation = getHitMapLocation(mapView, p);
-		if ( isRemovePriorPopup || mSelectedMapLocation != null) 
-		{
-	    mapView.invalidate();
-	    if (showWinInfo == true && mSelectedMapLocation != null)
-	    {
-	      mSelectedMapLocation = null;
-	      showWinInfo = false;
-	    }
-		}		
-		else
-		{
-		  showWinInfo = false;
-		}
-		*/
 		Log.i("TAG", "onTap");
 		
 		//看現在記了幾點
@@ -132,8 +107,7 @@ public class mOverLay  extends Overlay {
 		//若小於兩點
 		if (newPointSize < 2)
 		{
-		  //mark TAG
-		  mSelectedMapLocation = getHitMapLocation(mapView, p);
+		 
 		  //加入
 		  gp.add(p);
 
@@ -195,50 +169,10 @@ public class mOverLay  extends Overlay {
     gp.clear();
   }
 
-  /**
-     * Test whether an information balloon should be displayed or a prior balloon hidden.
-     */
-  private MapLocation getHitMapLocation(MapView	mapView, GeoPoint	tapPoint) {
-    	
-    	/**
-    	 *   Tracking the clicks on MapLocation
-    	 */
-    	MapLocation hitMapLocation = null;
-		
-    	RectF hitTestRecr = new RectF();
-		  Point screenCoords = new Point();
-    	Iterator<MapLocation> iterator = mLocationViewers.getMapLocations(false).iterator();
-    	while(iterator.hasNext()) {
-    		MapLocation testLocation = iterator.next();
-    		
-    		/**
-    		 * This is used to translate the map's lat/long coordinates to screen's coordinates
-    		 */
-    		mapView.getProjection().toPixels(testLocation.getPoint(), screenCoords);
 
-	    	// Create a testing Rectangle with the size and coordinates of our icon
-	    	// Set the testing Rectangle with the size and coordinates of our on screen icon
-    		hitTestRecr.set(-mBubbleIcon.getWidth()/2,-mBubbleIcon.getHeight(),mBubbleIcon.getWidth()/2,0);
-    		hitTestRecr.offset(screenCoords.x,screenCoords.y);
-
-	    	//  At last test for a match between our Rectangle and the location clicked by the user
-    		mapView.getProjection().toPixels(tapPoint, screenCoords);
-    		
-    		if (hitTestRecr.contains(screenCoords.x,screenCoords.y)) {
-    			hitMapLocation = testLocation;
-    			break;
-    		}
-    	}
-    	
-    	//  Finally clear the new MouseSelection as its process finished
-    	tapPoint = null;
-    	
-    	return hitMapLocation; 
-    }
-
-    //draw range
-    private void drawPointRange(Canvas canvas, MapView mapView, boolean shadow) 
-    {
+  //draw range
+  private void drawPointRange(Canvas canvas, MapView mapView, boolean shadow) 
+  {
       //若要求顯示才顯示
       if (ReadyShowRange == true)
       {
