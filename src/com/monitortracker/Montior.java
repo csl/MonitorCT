@@ -80,6 +80,7 @@ public class Montior extends MapActivity
   private static final int MSG_DIALOG_SAFE = 1;  
   private static final int MSG_DIALOG_OVERRANGE = 2;
   private static final int MSG_DIALOG_SETS = 3;
+  private static final int MSG_DIALOG_SHOWCHILD = 4;
   
   private static final int MENU_MANAGE = Menu.FIRST  ;
   private static final int MENU_EXIT = Menu.FIRST +1 ;
@@ -156,9 +157,10 @@ public class Montior extends MapActivity
     IPAddress = (String) this.getResources().getText(R.string.url);
     oldGPSRangeData = "";
 
-    //顯示輸入IP的windows
+    //顯示login的windows
     if (display != 1)
     {
+      display = 1;
       AlertDialog.Builder alert = new AlertDialog.Builder(mMontior);
 
       alert.setTitle("登入login");
@@ -203,7 +205,7 @@ public class Montior extends MapActivity
         (
             Montior.this,
             "login",
-            "...",
+            ".........",
             true
         );
         
@@ -235,68 +237,20 @@ public class Montior extends MapActivity
             }
             finally
             {
-              myDialog.dismiss();
-              
-              try {
-              
-                   if (data.h_chilid.equals(""))
-                   {
-                     Log.i("ERROR", "LOGINFAIL");
-                     finish();
-                   }
-                   else
-                   {
-                     if (getChildList() != null)
-                     {
-                      //error
-                      if (childlist == null)
-                      {
-                        return;
-                      }          
-                      
-                      ArrayList<Integer> ChildData = new  ArrayList<Integer>();
-                      StringTokenizer Tok = new StringTokenizer(data.h_chilid, ",");
-                      while (Tok.hasMoreElements())
-                      {
-                        ChildData.add( Integer.valueOf((String) Tok.nextElement()) );
-                      }
-                      
-                      final CharSequence[] child_id = new String[ChildData.size()];
-                      int checked = 0;
-                      
-                      for(int i = 0 ;i<ChildData.size(); i++)
-                      {
-                        child_id[i] = childlist.get(ChildData.get(i)).name; 
-                      }
-                       
-                       AlertDialog.Builder builder = new AlertDialog.Builder(mMontior);
-                       builder.setTitle("選擇監控小孩");  
-                        //builder.setCancelable(false);
-                       
-                       builder.setSingleChoiceItems(child_id, checked, new DialogInterface.OnClickListener() { 
-                         public void onClick(DialogInterface dialog, int which) 
-                         {
-                           mchildid = which;
-                         } 
-                      }); 
-                       
-                       builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
-                         public void onClick(DialogInterface dialog, int which) 
-                         {
-                           timer.schedule(new DateTask(), 0, 5000);                        
-                         } 
-                      }); 
-                        
-                      AlertDialog alert = builder.create();  
-                      alert.show();
-                     }
-                   }
-               }
-              catch (Exception err)
+              if (data.h_chilid.equals("000"))
               {
-                     err.printStackTrace();
+                myDialog.dismiss();
+                finish();
               }
-             }                 
+              else
+              {
+                Message msg = new Message();
+                msg.what = MSG_DIALOG_SHOWCHILD;
+                myHandler.sendMessage(msg);
+                
+                myDialog.dismiss();
+              }
+            }                 
            }
          }.start();                               
       }
@@ -491,6 +445,61 @@ public class Montior extends MapActivity
     
     return 1;
   }
+  
+  public void show_child_msg()
+  {
+    try {
+       if (getChildList() != null)
+        {
+         //error
+         if (childlist == null)
+         {
+           Log.i(TAG, "null");
+           return;
+         }          
+         
+         ArrayList<Integer> ChildData = new  ArrayList<Integer>();
+         StringTokenizer Tok = new StringTokenizer(data.h_chilid, ",");
+         while (Tok.hasMoreElements())
+         {
+           ChildData.add( Integer.valueOf((String) Tok.nextElement()) );
+         }
+         
+         final CharSequence[] child_id = new String[ChildData.size()];
+         int checked = 0;
+         
+         for(int i = 0 ;i<ChildData.size(); i++)
+         {
+           child_id[i] = childlist.get(ChildData.get(i)).name; 
+         }
+          
+          AlertDialog.Builder builder = new AlertDialog.Builder(mMontior);
+          builder.setTitle("選擇監控小孩");  
+           //builder.setCancelable(false);
+          
+          builder.setSingleChoiceItems(child_id, checked, new DialogInterface.OnClickListener() { 
+            public void onClick(DialogInterface dialog, int which) 
+            {
+              mchildid = which;
+            } 
+         }); 
+          
+          builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
+            public void onClick(DialogInterface dialog, int which) 
+            {
+              timer.schedule(new DateTask(), 0, 5000);                        
+            } 
+         }); 
+           
+         AlertDialog alert = builder.create();  
+         alert.show();
+        }
+      }
+     catch (Exception err)
+     {
+            err.printStackTrace();
+     }  
+  }
    
   public void getLocationProvider() 
   { 
@@ -615,7 +624,9 @@ public class Montior extends MapActivity
             else
               label.setText("安全/未設置範圍");
             break;
-            
+          case MSG_DIALOG_SHOWCHILD:
+            show_child_msg();
+            break;
           default:
                 label.setText(Integer.toString(msg.what));
         }
