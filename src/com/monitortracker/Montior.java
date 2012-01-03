@@ -130,9 +130,6 @@ public abstract class Montior extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
 
-    IPAddress = (String) this.getResources().getText(R.string.url);
-    oldGPSRangeData = "";
-
     timer = new Timer();
     mp = null;
     childlist = null;
@@ -156,6 +153,9 @@ public abstract class Montior extends MapActivity
     intZoomLevel = 18; 
     mMapController01.setZoom(intZoomLevel); 
 
+    IPAddress = (String) this.getResources().getText(R.string.url);
+    oldGPSRangeData = "";
+
     //顯示輸入IP的windows
     if (display != 1)
     {
@@ -163,6 +163,7 @@ public abstract class Montior extends MapActivity
 
       alert.setTitle("登入login");
       alert.setMessage("請輸入帳號 和 密碼");
+      
       ScrollView sv = new ScrollView(this);
       LinearLayout ll = new LinearLayout(this);
       ll.setOrientation(LinearLayout.VERTICAL);

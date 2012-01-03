@@ -67,57 +67,11 @@ public class menu extends ListActivity
       { 
           case MENU_START:
             
-            final EditText euser = new EditText(mMenu);
-            final EditText epwd = new EditText(mMenu);
-            final Spinner lists = new Spinner(mMenu);
-            
-            euser.setText(user);
-            epwd.setText(pwd);
-            
-            AlertDialog.Builder alert = new AlertDialog.Builder(mMenu);
-
-          //openOptionsDialog(getLocalIpAddress());
-
-            alert.setTitle("Login");
-            alert.setMessage("½Ðµn¤J±b¸¹±K½X");
-              
-            // Set an EditText view to get user input
-            LinearLayout layout = new LinearLayout(mMenu);
-            layout.addView(euser);
-            layout.addView(epwd);
-            layout.addView(lists);
-            
-            alert.setView(layout);
-            
-            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) 
-            {
-              try
-              {
-                Intent intent = null;
+                intent = new Intent();
                 intent.setClass(menu.this, Montior.class);
                 menu.this.finish();
                 startActivity(intent);
                 
-                //display = 1;
-                //IPAddress = input.getText().toString();  
-              }
-              catch (Exception e)
-              {
-                e.printStackTrace();
-              }
-              //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
-            }
-            });
-          
-            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                  // Canceled.
-                }
-              });
-          
-             alert.show();      
-            
              return true;
       
           case MENU_EXIT:
