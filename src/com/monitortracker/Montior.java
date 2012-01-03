@@ -73,7 +73,7 @@ import com.google.android.maps.MapView;
 //import com.google.android.maps.Overlay;
 //import com.google.android.maps.OverlayItem;
 
-public abstract class Montior extends MapActivity 
+public class Montior extends MapActivity 
 {
   private String TAG = "Monitor";
   
