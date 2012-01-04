@@ -9,7 +9,7 @@ public class LoginXMLHandler extends DefaultHandler
 	  private boolean h_id = false;
 	  private boolean h_scuess = false;
 	  
-	  private LoginXMLStruct myParsedExampleDataSet = new LoginXMLStruct();
+	  private LoginXMLStruct myParsedExampleDataSet;
 	  
 	  public LoginXMLStruct getParsedData() 
 	  {

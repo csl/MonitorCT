@@ -113,9 +113,9 @@ public class Montior extends MapActivity
   public TextView label;
   public String oldGPSRangeData;
 
-  private int mchildid=0;
   private medplayer mp;
   static private int display = 0;
+  static public int mchildid = 0;
   
   private ProgressDialog myDialog;
   private LoginXMLStruct data;
@@ -134,7 +134,6 @@ public class Montior extends MapActivity
     timer = new Timer();
     mp = null;
     childlist = null;
-    mchildid = -1;
     
     mMontior = this;
     
@@ -237,19 +236,24 @@ public class Montior extends MapActivity
             }
             finally
             {
-              if (data.h_chilid.equals("000"))
+              if (data != null)
               {
-                myDialog.dismiss();
-                finish();
+                if (data.h_chilid.equals("000"))
+                {
+                  finish();
+                }
+                else
+                {
+                  Message msg = new Message();
+                  msg.what = MSG_DIALOG_SHOWCHILD;
+                  myHandler.sendMessage(msg);
+                }
               }
               else
               {
-                Message msg = new Message();
-                msg.what = MSG_DIALOG_SHOWCHILD;
-                myHandler.sendMessage(msg);
-                
-                myDialog.dismiss();
+                openOptionsDialog("null");                
               }
+              myDialog.dismiss();
             }                 
            }
          }.start();                               
@@ -264,6 +268,10 @@ public class Montior extends MapActivity
         });
     
         alert.show();      
+    }
+    else
+    {
+      timer.schedule(new DateTask(), 0, 5000);                        
     }
         
     //建構畫在GoogleMap的overlay
@@ -470,8 +478,17 @@ public class Montior extends MapActivity
          
          for(int i = 0 ;i<ChildData.size(); i++)
          {
-           child_id[i] = childlist.get(ChildData.get(i)).name; 
+           for(int j = 0 ;j<childlist.size(); j++)
+           {
+             if (ChildData.get(i) == Integer.valueOf(childlist.get(j).childid))
+             {
+               child_id[i] = childlist.get(j).name;
+               break;
+             }
+           }
          }
+         
+         mchildid = Integer.valueOf(childlist.get(0).childid);
           
           AlertDialog.Builder builder = new AlertDialog.Builder(mMontior);
           builder.setTitle("選擇監控小孩");  
@@ -480,7 +497,7 @@ public class Montior extends MapActivity
           builder.setSingleChoiceItems(child_id, checked, new DialogInterface.OnClickListener() { 
             public void onClick(DialogInterface dialog, int which) 
             {
-              mchildid = which;
+              mchildid = Integer.valueOf(childlist.get(which).childid);
             } 
          }); 
           
@@ -646,6 +663,8 @@ public class Montior extends MapActivity
       
       String uriAPI = IPAddress + "getchildstatus.php?nowtime=" + shour + ":" + sminute + "&childid=" + mchildid;
       
+      Log.i(TAG, uriAPI);
+      
       URL url = null;
       try{
         url = new URL(uriAPI);
@@ -690,15 +709,19 @@ public class Montior extends MapActivity
           refreshDouble2Geo(GPSData[0], GPSData[1], 0);
         }
       }
-      
+
+      Log.i(TAG, "name " + csdata.h_name);
+
       if (!csdata.h_name.equals("nodata"))
       {
         String cname, cgps, cstime, cdtime;
-        
+
         cname = csdata.h_name;
         cgps = csdata.h_rangegps;
         cstime = csdata.h_stime;
         cdtime = csdata.h_dtime;
+
+        Log.i(TAG, cgps);
 
         if (oldGPSRangeData.equals(""))
         {
@@ -760,7 +783,7 @@ public class Montior extends MapActivity
         {
          public void onClick(DialogInterface dialoginterface, int i)
          {
-           mshow = false;
+           
          }
          }
         )

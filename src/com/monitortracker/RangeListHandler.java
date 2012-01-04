@@ -71,7 +71,7 @@ public class RangeListHandler extends DefaultHandler
 	public void endElement(String uri, String localName, String qName)
 			throws SAXException {
 
-		if (localName.toLowerCase().equals("rfitem")) 
+		if (localName.toLowerCase().equals("item")) 
 		{
 			jlcs.addRXMLItem(jls);	
 		}

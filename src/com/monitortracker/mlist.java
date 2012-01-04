@@ -96,7 +96,10 @@ protected void onCreate(Bundle icicle)
       return;
     }
     
-    updatedata();
+    if (grs != null)
+    {
+      updatedata();
+    }
 
     gpslist.setOnItemClickListener(new OnItemClickListener() 
     {  
@@ -171,6 +174,30 @@ public boolean onContextItemSelected(MenuItem aItem)
                     
                case CONTEXTMENU_DELETE:
                  deleteList();
+                 String uriAPI = IPAddress + "getallrange.php";
+                 
+                 URL url = null;
+                 try{
+                   url = new URL(uriAPI);
+                   
+                   SAXParserFactory spf = SAXParserFactory.newInstance();
+                   SAXParser sp = spf.newSAXParser();
+                   XMLReader xr = sp.getXMLReader();
+                   RangeListHandler myHandler = new RangeListHandler();
+                   xr.setContentHandler(myHandler);
+                   //open connection
+                   xr.parse(new InputSource(url.openStream()));
+                   grs = myHandler.getContainer().getListItems();
+                 }
+                 catch(Exception e){
+                   e.printStackTrace();
+                 }
+                 
+                 if (grs != null)
+                 {
+                   updatedata();
+                 }
+                 
                  return true; /* true means: "we handled the event". */
           }
 

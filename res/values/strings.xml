@@ -3,7 +3,7 @@
   <string name="hello">Hello ChildTracker</string> 
   <string name="app_name">Monitor</string>
   
-  <string name="url">http://192.168.173.105/monitor/</string>
+  <string name="url">http://192.168.0.50:44444/monitor/</string>
   
   <string name="menu_start">開始使用</string>
   <string name="menu_manager">範圍管理</string>

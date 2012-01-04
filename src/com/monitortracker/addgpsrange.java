@@ -88,6 +88,7 @@ public class addgpsrange extends MapActivity
   private TextView name;
   private TextView stime;
   private TextView dtime;
+  private TextView tcchild;
   
   static public addgpsrange maddgpsrange;
   //private SocketServer s_socket = null;
@@ -103,6 +104,8 @@ public class addgpsrange extends MapActivity
   public GeoPoint nowGeoPoint;
   
   private String IPAddress;
+  
+  private int checked;
   
   public GeoPoint top_left;        
   public GeoPoint top_right;
@@ -130,7 +133,7 @@ public class addgpsrange extends MapActivity
     setContentView(R.layout.addgpsrange);
     
     umode = -1;
-    mchildid = "";
+    mchildid = Integer.toString(Montior.mchildid);
     maddgpsrange = this;
     
     Bundle bundle = this.getIntent().getExtras();
@@ -147,6 +150,7 @@ public class addgpsrange extends MapActivity
     name = (TextView) findViewById(R.id.name);
     stime = (TextView) findViewById(R.id.stime_text);
     dtime = (TextView) findViewById(R.id.dtime_text);
+    tcchild = (TextView) findViewById(R.id.tcchild);
     gpsrange = "";
     
     //參數設定 
@@ -171,7 +175,6 @@ public class addgpsrange extends MapActivity
 
     refreshMapViewByGeoPoint(nowGeoPoint, 
         mMapView, intZoomLevel);
-    
     
     if (umode != -1)
     {
@@ -231,34 +234,56 @@ public class addgpsrange extends MapActivity
           (int)(GPSData[7] * 1e6));
       
       overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
+      
+      
+      if (getChildList() != null)
+      {
+        for (i=0; i<childlist.size(); i++)
+        {
+          if (mlist.grs.get(umode).child.equals(childlist.get(i).childid))
+          {
+            break;
+          }
+        }
+        tcchild.setText(childlist.get(i).name);
+        checked = i;
+        mchildid = childlist.get(i).childid;
+      }
+      
       Log.i(TAG, "loading edit data");
       //sendtoChildTracker
     }       
     
     //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
     
-    cchildButton = (Button)findViewById(R.id.clear_button); 
+    cchildButton = (Button)findViewById(R.id.cchild); 
     cchildButton.setOnClickListener(new Button.OnClickListener() 
     { 
       public void onClick(View v) 
       { 
-        if (getChildList() != null)
-        {
          //error
          if (childlist == null)
          {
-           return;
+           if (getChildList() != null)
+           {
+             if (childlist == null)
+             {
+               return;
+             }
+           }
          }          
          
          final CharSequence[] child_id = new String[childlist.size()];
-         int checked = 0;
+         int i =0;
          
-         if (umode != -1)
+         if (umode == -1)
          {
-           checked = Integer.valueOf(mlist.grs.get(umode).child);
+           checked = 0;
+           mchildid = childlist.get(0).childid;
+           tcchild.setText(childlist.get(0).name);
          }
          
-         for(int i = 0 ;i<childlist.size(); i++)
+         for(i = 0 ;i<childlist.size(); i++)
          {
            child_id[i] = childlist.get(i).name; 
          }
@@ -271,6 +296,7 @@ public class addgpsrange extends MapActivity
             public void onClick(DialogInterface dialog, int which) 
             {
               mchildid = childlist.get(which).childid;
+              tcchild.setText(childlist.get(which).name);
             } 
          }); 
           
@@ -283,7 +309,6 @@ public class addgpsrange extends MapActivity
          AlertDialog alert = builder.create();  
          alert.show();
         }
-      } 
     }); 
     
 
@@ -317,7 +342,7 @@ public class addgpsrange extends MapActivity
           if (!gpsrange.equals("") && !cname.equals("") 
                           && !sctime.equals("") &&  !dctime.equals(""))
           {
-            SendGPSData(cname, sctime, dctime, gpsrange, null, mchildid);
+            SendGPSData(cname, gpsrange, sctime, dctime, null, mchildid);
           }
         }
         else
@@ -331,7 +356,7 @@ public class addgpsrange extends MapActivity
                           && !sctime.equals("") &&  !dctime.equals(""))
           {
             //sending
-            SendGPSData(cname, sctime, dctime, gpsrange, id, mchildid);
+            SendGPSData(cname, gpsrange, sctime, dctime, id, mchildid);
           }          
         }
       } 
@@ -507,16 +532,23 @@ public class addgpsrange extends MapActivity
     //insert
     if (id == null)
     {
-      url_list = IPAddress + "insertrange.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
+      url_list = IPAddress + "insertrange.php?name=" + name + "&gps=" + gpsdata + "&stime=" + st +
       "&dtime="  + dt + "&childid=" + childid;
     }
     else
     {
-      url_list = IPAddress + "insertrange.php?name=" + name + "&gps=" + gpsdata + "&stime" + st +
+      url_list = IPAddress + "insertrange.php?name=" + name + "&gps=" + gpsdata + "&stime=" + st +
       "&dtime="  + dt + "&childid=" + childid + "&id=" + id;
     }
     
-    toweb(url_list);
+    if ( toweb(url_list) == 1)
+    {
+      msg_fail();
+    }
+    else
+    {
+      msg_ok();
+    }
   }
 
   @Override 
